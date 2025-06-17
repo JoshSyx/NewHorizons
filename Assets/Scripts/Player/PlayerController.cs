@@ -18,6 +18,8 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        rb.useGravity = false; // Assuming you want full control over grounded motion
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -33,31 +35,13 @@ public class PlayerController : MonoBehaviour
     private void MovePlayer()
     {
         Vector3 inputDir = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
+        Vector3 moveDelta = inputDir * speed * Time.fixedDeltaTime;
+        rb.MovePosition(rb.position + moveDelta);
 
-        Ray ray = new Ray(rb.position + Vector3.up * 0.1f, Vector3.down);
-        if (Physics.Raycast(ray, out RaycastHit hitInfo, 1f))
+        if (moveInput.sqrMagnitude > 0.01f)
         {
-            slopeNormal = hitInfo.normal;
-
-            Vector3 moveDir = Vector3.ProjectOnPlane(inputDir, slopeNormal).normalized;
-
-            Vector3 targetVelocity = moveDir * speed;
-            float changeRate = (targetVelocity.sqrMagnitude > 0.01f) ? accelerationSpeed : slipSpeed;
-
-            currentVelocity = Vector3.MoveTowards(currentVelocity, targetVelocity, changeRate * Time.deltaTime);
-
-            Vector3 moveDelta = new Vector3(currentVelocity.x, 0f, currentVelocity.z) * Time.deltaTime;
-            rb.MovePosition(rb.position + moveDelta);
-
-            Vector3 groundedPosition = new Vector3(rb.position.x, hitInfo.point.y, rb.position.z);
-            rb.MovePosition(groundedPosition);
-
-            if (moveInput.sqrMagnitude > 0.01f)
-            {
-                Quaternion targetRotation = Quaternion.LookRotation(moveDir);
-                rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, 0.15f));
-            }
+            Quaternion targetRotation = Quaternion.LookRotation(inputDir);
+            rb.MoveRotation(Quaternion.Slerp(rb.rotation, targetRotation, 10f * Time.fixedDeltaTime));
         }
     }
-
 }

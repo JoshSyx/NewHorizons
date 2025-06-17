@@ -11,22 +11,29 @@ public class CameraFollow : MonoBehaviour
     public float smoothTime = 0.2f;
 
     private Vector3 currentVelocity = Vector3.zero;
-    private Vector3 currentPosition;
+    private Vector3 smoothedTargetPosition;
 
-    private void LateUpdate()
+    private void Start()
+    {
+        if (target != null)
+        {
+            smoothedTargetPosition = target.position;
+        }
+    }
+
+    private void Update()
     {
         if (target == null) return;
 
         pitch = Mathf.Clamp(pitch, -89f, 89f);
 
-        Quaternion orbitRotation = Quaternion.Euler(pitch, yaw, 0);
-        Vector3 offset = orbitRotation * new Vector3(0, 0, -distance);
+        smoothedTargetPosition = Vector3.SmoothDamp(smoothedTargetPosition, target.position, ref currentVelocity, smoothTime);
 
-        Vector3 desiredPosition = target.position + offset;
+        Quaternion cameraRotation = Quaternion.Euler(pitch, yaw, 0f);
 
-        currentPosition = Vector3.SmoothDamp(transform.position, desiredPosition, ref currentVelocity, smoothTime);
-        transform.position = currentPosition;
+        Vector3 offset = cameraRotation * new Vector3(0f, 0f, -distance);
+        transform.position = smoothedTargetPosition + offset;
 
-        transform.LookAt(target.position);
+        transform.rotation = cameraRotation;
     }
 }
