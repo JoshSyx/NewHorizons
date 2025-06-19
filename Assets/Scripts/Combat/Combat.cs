@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Handles combat-related functionality.
 /// </summary>
-public abstract class Combat : MonoBehaviour
+public class Combat : MonoBehaviour
 {
     /// <summary>
     /// Applies damage and, optionally, a timed effect to a target GameObject 

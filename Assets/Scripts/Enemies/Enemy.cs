@@ -12,6 +12,8 @@ using UnityEngine.AI;
 [RequireComponent(typeof(Animator))]
 public class Enemy : Health
 {
+
+    private Combat _combat;
     /// <summary>
     /// The amount of damage that the enemy can inflict on a target during an attack.
     /// </summary>
@@ -66,9 +68,10 @@ public class Enemy : Health
     /// <see cref="Animator"/>.
     /// </summary>
     private void Awake()
-    { 
+    {
         _agent = GetComponent<NavMeshAgent>();
         _animator = GetComponent<Animator>();
+        _combat = GetComponent<Combat>();
     }
 
     /// <summary>
@@ -138,7 +141,7 @@ public class Enemy : Health
             return;
         }
         Debug.Log("Attacking");
-        Combat.ManageHit(_player.gameObject, damage);
+        _combat.ManageHit(_player.gameObject, damage);
         _nextAttackTime = Time.time + attackCooldown;
     }
 

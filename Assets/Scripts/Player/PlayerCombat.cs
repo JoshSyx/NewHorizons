@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerAbilityControl : Combat
+public class PlayerCombat : Combat
 {
     private int abilityIndex = 0;
     public void OnAttack(InputAction.CallbackContext context)
