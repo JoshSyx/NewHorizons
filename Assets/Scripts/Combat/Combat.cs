@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Handles combat-related functionality.
 /// </summary>
-public static class Combat
+public abstract class Combat : MonoBehaviour
 {
     /// <summary>
     /// Applies damage and, optionally, a timed effect to a target GameObject 
@@ -13,7 +13,7 @@ public static class Combat
     /// <param name="damage">The amount of damage to apply.</param>
     /// <param name="inflictEffect">The optional effect to apply to the target. Pass <c>null</c> to apply no effect.</param>
     /// <param name="effectTime">The duration in seconds for which the effect should last, if one is applied.</param>
-    public static void ManageHit(GameObject target, float damage, Effect? inflictEffect = null, float effectTime = 0f)
+    public void ManageHit(GameObject target, float damage, Effect? inflictEffect = null, float effectTime = 0f)
     {
         if (target.TryGetComponent(out Health targetHealth))
         {
