@@ -17,8 +17,8 @@ public class Health : MonoBehaviour
     /// <summary>
     /// Called when health reaches 0. Override to add game-specific logic.
     /// </summary>
-    public void Kill()
+    public virtual void Kill()
     {
-        Debug.Log($"{gameObject.name} has died.");
+        Debug.Log($"{gameObject.name} is killed");
     }
 }
