@@ -219,10 +219,14 @@ public class EnemiesController : MonoBehaviour
     /// </returns>
     private Vector3 GetRandomSpawnPositionNearPlayer()
     {
-        var randomDirection = _player.position + Random.insideUnitSphere * spawnRadius;
-        if (NavMesh.SamplePosition(randomDirection, out var hit, 50f, NavMesh.AllAreas))
+        if (_player != null)
         {
-            return hit.position;
+            var randomDirection = _player.position + Random.insideUnitSphere * spawnRadius;
+
+            if (NavMesh.SamplePosition(randomDirection, out var hit, 50f, NavMesh.AllAreas))
+            {
+                return hit.position;
+            }
         }
         return Vector3.zero;
     }

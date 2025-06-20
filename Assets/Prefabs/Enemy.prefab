@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 6790669780672127127}
   - component: {fileID: -3036244849977158234}
   - component: {fileID: 4778411783762858435}
+  - component: {fileID: 1983991261542392303}
   - component: {fileID: 8485243411838976090}
   m_Layer: 0
   m_Name: Enemy
@@ -70,7 +71,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 1d5384e03f34e2b45a9e2defbc5109b3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -177,6 +178,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   baseAmount: 100
+  idle: {fileID: 2100000, guid: 1d5384e03f34e2b45a9e2defbc5109b3, type: 2}
+  getHit: {fileID: 2100000, guid: 951b8304f139d6c41ab5077db2bf7837, type: 2}
+  die: {fileID: 2100000, guid: ef5a48483ba767c46b084b842e9afa38, type: 2}
 --- !u!114 &4778411783762858435
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -190,8 +194,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   baseAmount: 100
+  idle: {fileID: 0}
+  getHit: {fileID: 0}
+  die: {fileID: 0}
   damage: 5
   attackCooldown: 4
+--- !u!114 &1983991261542392303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3553088143777831068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23efed6743b169c4a96734c00dfa705d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!95 &8485243411838976090
 Animator:
   serializedVersion: 7

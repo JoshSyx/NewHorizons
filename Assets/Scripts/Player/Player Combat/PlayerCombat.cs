@@ -8,9 +8,6 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float attack3Damage = 30f;
     [SerializeField] private float heightOffset = 1.8f;
 
-    [SerializeField] private Effect attack2Effect;
-    [SerializeField] private float attack2EffectDuration = 5f;
-
     private void Awake()
     {
         if (combat == null)
@@ -32,7 +29,7 @@ public class PlayerCombat : MonoBehaviour
         GameObject enemy = DetectEnemy();
         if (enemy != null)
         {
-            combat.ManageHit(enemy, attack2Damage, attack2Effect, attack2EffectDuration);
+            combat.ManageHit(enemy, attack2Damage);
             Debug.Log("Attack 2 executed");
         }
     }
