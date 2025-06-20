@@ -392,6 +392,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Menu Open Close",
+                    "type": "Button",
+                    "id": "f7536261-6412-4999-8c78-ed8937a8cb83",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Submit",
                     "type": "Button",
                     "id": "d2663b14-36e2-49d1-b4d1-b6dc67d2dbf2",
@@ -737,6 +746,28 @@
                     "action": "Navigate",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "c13b59d4-ec8f-424c-98ba-1abd78894376",
+                    "path": "<Gamepad>/start",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Menu Open Close",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "5565e2c5-8130-466c-9daf-a99739b100f4",
+                    "path": "<Keyboard>/escape",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard;Keyboard&Mouse",
+                    "action": "Menu Open Close",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",

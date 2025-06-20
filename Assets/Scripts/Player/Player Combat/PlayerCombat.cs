@@ -1,25 +1,18 @@
 using UnityEngine;
 
-public class PlayerCombat : MonoBehaviour
+public class PlayerCombat : Combat
 {
-    [SerializeField] private Combat combat;
     [SerializeField] private float attack1Damage = 10f;
     [SerializeField] private float attack2Damage = 20f;
     [SerializeField] private float attack3Damage = 30f;
     [SerializeField] private float heightOffset = 1.8f;
-
-    private void Awake()
-    {
-        if (combat == null)
-            combat = GetComponent<Combat>();
-    }
 
     public void DoAttack1()
     {
         GameObject enemy = DetectEnemy();
         if (enemy != null)
         {
-            combat.ManageHit(enemy, attack1Damage);
+            ManageHit(enemy, attack1Damage);
             Debug.Log("Attack 1 executed");
         }
     }
@@ -29,7 +22,7 @@ public class PlayerCombat : MonoBehaviour
         GameObject enemy = DetectEnemy();
         if (enemy != null)
         {
-            combat.ManageHit(enemy, attack2Damage);
+            ManageHit(enemy, attack2Damage);
             Debug.Log("Attack 2 executed");
         }
     }
@@ -39,7 +32,7 @@ public class PlayerCombat : MonoBehaviour
         GameObject enemy = DetectEnemy();
         if (enemy != null)
         {
-            combat.ManageHit(enemy, attack3Damage);
+            ManageHit(enemy, attack3Damage);
             Debug.Log("Attack 3 executed");
         }
     }

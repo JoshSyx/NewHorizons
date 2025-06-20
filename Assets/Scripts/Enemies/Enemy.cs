@@ -49,10 +49,6 @@ public class Enemy : Health
         {
             _player = playerObj.transform;
         }
-        else
-        {
-            Debug.LogError("Player object not found!");
-        }
     }
 
     /// <summary>
@@ -62,7 +58,6 @@ public class Enemy : Health
     {
         if (!_player)
         {
-            Debug.LogError("Player not found!");
             return;
         }
 
@@ -93,11 +88,9 @@ public class Enemy : Health
     {
         if (!_player)
         {
-            Debug.LogError("Player not found!");
             return;
         }
 
-        Debug.Log("Attacking");
         _combat.ManageHit(_player.gameObject, damage);
         _nextAttackTime = Time.time + attackCooldown;
     }

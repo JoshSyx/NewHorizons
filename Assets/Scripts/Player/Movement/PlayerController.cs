@@ -52,7 +52,7 @@ public class PlayerController : MonoBehaviour
     {
         if (UserInput.instance == null) return;
 
-        if (UserInput.instance.actionOneJustPressed && !isDashing && dashCooldownTimer <= 0f && lastMoveDirection.sqrMagnitude > 0.01f)
+        if (UserInput.instance.ActionOneJustPressed && !isDashing && dashCooldownTimer <= 0f && lastMoveDirection.sqrMagnitude > 0.01f)
         {
             StartCoroutine(DashRoutine(lastMoveDirection.normalized));
         }
@@ -62,15 +62,15 @@ public class PlayerController : MonoBehaviour
     {
         if (UserInput.instance == null || isDashing) return;  // Optional: block attacks while dashing
 
-        if (UserInput.instance.actionTwoJustPressed)
+        if (UserInput.instance.ActionTwoJustPressed)
         {
             playerCombat.DoAttack1();
         }
-        if (UserInput.instance.actionThreeJustPressed)
+        if (UserInput.instance.ActionThreeJustPressed)
         {
             playerCombat.DoAttack2();
         }
-        if (UserInput.instance.actionFourJustPressed)
+        if (UserInput.instance.ActionFourJustPressed)
         {
             playerCombat.DoAttack3();
         }

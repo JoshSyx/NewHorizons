@@ -7,20 +7,20 @@ public class UserInput : MonoBehaviour
     public static PlayerInput PlayerInput;
 
     public Vector2 MoveInput {  get; private set; }
-    public bool actionOneJustPressed { get; private set; }
-    public bool actionTwoJustPressed { get; private set; }
-    public bool actionThreeJustPressed { get; private set; }
-    public bool actionFourJustPressed { get; private set; }
+    public bool ActionOneJustPressed { get; private set; }
+    public bool ActionTwoJustPressed { get; private set; }
+    public bool ActionThreeJustPressed { get; private set; }
+    public bool ActionFourJustPressed { get; private set; }
 
-    public bool actionOneBeingHeld { get; private set; }
-    public bool actionTwoBeingHeld { get; private set; }
-    public bool actionThreeBeingHeld { get; private set; }
-    public bool actionFourBeingHeld { get; private set; }
+    public bool ActionOneBeingHeld { get; private set; }
+    public bool ActionTwoBeingHeld { get; private set; }
+    public bool ActionThreeBeingHeld { get; private set; }
+    public bool ActionFourBeingHeld { get; private set; }
 
-    public bool actionOneReleased { get; private set; }
-    public bool actionTwoReleased { get; private set; }
-    public bool actionThreeReleased { get; private set; }
-    public bool actionFourReleased { get; private set; }
+    public bool ActionOneReleased { get; private set; }
+    public bool ActionTwoReleased { get; private set; }
+    public bool ActionThreeReleased { get; private set; }
+    public bool ActionFourReleased { get; private set; }
 
     public bool MenuOpenCloseInput { get; private set; }
 
@@ -46,7 +46,6 @@ public class UserInput : MonoBehaviour
 
     private void Update()
     {
-        Debug.Log("Current Control Scheme: " + PlayerInput.currentControlScheme);
         UpdateInputs();
     }
     public void SetupInputActions()
@@ -62,20 +61,20 @@ public class UserInput : MonoBehaviour
     private void UpdateInputs()
     {
         MoveInput = _moveAction.ReadValue<Vector2>();
-        actionOneJustPressed = _actionOne.WasPressedThisFrame();
-        actionTwoJustPressed = _actionTwo.WasPressedThisFrame();
-        actionThreeJustPressed = _actionThree.WasPressedThisFrame();
-        actionFourJustPressed = _actionFour.WasPressedThisFrame();
+        ActionOneJustPressed = _actionOne.WasPressedThisFrame();
+        ActionTwoJustPressed = _actionTwo.WasPressedThisFrame();
+        ActionThreeJustPressed = _actionThree.WasPressedThisFrame();
+        ActionFourJustPressed = _actionFour.WasPressedThisFrame();
 
-        actionOneBeingHeld = _actionOne.IsPressed();
-        actionTwoBeingHeld = _actionTwo.IsPressed();
-        actionThreeBeingHeld = _actionThree.IsPressed();
-        actionFourBeingHeld = _actionFour.IsPressed();
+        ActionOneBeingHeld = _actionOne.IsPressed();
+        ActionTwoBeingHeld = _actionTwo.IsPressed();
+        ActionThreeBeingHeld = _actionThree.IsPressed();
+        ActionFourBeingHeld = _actionFour.IsPressed();
 
-        actionOneReleased = _actionOne.WasReleasedThisFrame();
-        actionTwoReleased = _actionTwo.WasReleasedThisFrame();
-        actionThreeReleased =_actionThree.WasReleasedThisFrame();
-        actionFourReleased = _actionFour.WasReleasedThisFrame();
+        ActionOneReleased = _actionOne.WasReleasedThisFrame();
+        ActionTwoReleased = _actionTwo.WasReleasedThisFrame();
+        ActionThreeReleased =_actionThree.WasReleasedThisFrame();
+        ActionFourReleased = _actionFour.WasReleasedThisFrame();
 
         MenuOpenCloseInput = _menuOpenCloseAction.WasPressedThisFrame();
     }
