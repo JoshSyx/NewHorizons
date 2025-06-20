@@ -20,5 +20,6 @@ public class Health : MonoBehaviour
     public virtual void Kill()
     {
         Debug.Log($"{gameObject.name} is killed");
+        Destroy(gameObject);
     }
 }

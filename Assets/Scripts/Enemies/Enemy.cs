@@ -95,7 +95,7 @@ public class Enemy : Health
     /// Handles movement towards the player, updates animations,
     /// and set attack trigger when the enemy reaches the player and the attack cooldown has elapsed.
     /// </summary>
-    private void Update()
+    private void FixedUpdate()
     {
         if (_player)
         {
