@@ -5,30 +5,38 @@ using UnityEngine;
 public class Health : MonoBehaviour
 {
     [Header("Health Settings")]
-    [SerializeField] private float baseAmount = 100f;
+    [SerializeField] private float maxHealth = 100f;
+    private float currentHealth;
+    private bool isDead = false;
 
-    [Header("User feedback")]
+    [Header("User Feedback")]
     [SerializeField] private Material idle;
     [SerializeField] private Material getHit;
     [SerializeField] private Material die;
 
     private List<Renderer> _allRenderers = new List<Renderer>();
     private List<Material[]> _originalMaterials = new List<Material[]>();
+    private Coroutine flashCoroutine;
+
+    public float CurrentHealth => currentHealth;
+    public bool IsAlive => currentHealth > 0f;
+
+    [Header("Knockback")]
+    [SerializeField] private float defaultKnockbackForce = 5f;
 
     protected virtual void Awake()
     {
-        // Find all renderers in this object and children
+        currentHealth = maxHealth;
+
         _allRenderers.AddRange(GetComponentsInChildren<Renderer>());
 
         foreach (var renderer in _allRenderers)
         {
-            // Save original materials so we can revert after getHit flash
             _originalMaterials.Add(renderer.materials);
 
-            // Optionally assign idle material to all sub-meshes
-            if (idle)
+            if (idle != null)
             {
-                var idleMats = new Material[renderer.materials.Length];
+                Material[] idleMats = new Material[renderer.materials.Length];
                 for (int i = 0; i < idleMats.Length; i++)
                     idleMats[i] = idle;
 
@@ -38,15 +46,33 @@ public class Health : MonoBehaviour
     }
 
     /// <summary>
-    /// Applies raw damage to this entity's health.
+    /// Inflict damage and optionally apply knockback.
     /// </summary>
-    /// <param name="damage">Amount of damage to subtract.</param>
-    public void InflictDamage(float damage)
+    /// <param name="damageData">Contains final damage amount and source.</param>
+    /// <param name="knockbackDir">Direction to apply knockback. Optional.</param>
+    /// <param name="force">Force of knockback. If 0, uses default.</param>
+    public void InflictDamage(DamageData damageData, Vector3? knockbackDir = null, float force = 0f)
     {
-        baseAmount = Mathf.Max(0f, baseAmount - damage);
-        StartCoroutine(FlashMaterial(getHit, 0.15f));
+        if (isDead) return;
 
-        if (baseAmount == 0f)
+        currentHealth = Mathf.Max(0f, currentHealth - damageData.FinalAmount);
+
+        if (flashCoroutine != null)
+            StopCoroutine(flashCoroutine);
+        flashCoroutine = StartCoroutine(FlashMaterial(getHit, 0.15f));
+
+        // Knockback
+        if (knockbackDir.HasValue)
+        {
+            Rigidbody rb = GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                float knockbackStrength = force > 0f ? force : defaultKnockbackForce;
+                rb.AddForce(knockbackDir.Value.normalized * knockbackStrength, ForceMode.Impulse);
+            }
+        }
+
+        if (currentHealth == 0f)
         {
             Kill();
         }
@@ -54,6 +80,9 @@ public class Health : MonoBehaviour
 
     public virtual void Kill()
     {
+        if (isDead) return;
+        isDead = true;
+
         Debug.Log($"{gameObject.name} is killed");
         StartCoroutine(HandleDeathVisuals());
     }
@@ -73,7 +102,6 @@ public class Health : MonoBehaviour
 
             yield return new WaitForSeconds(duration);
 
-            // Restore original materials
             for (int i = 0; i < _allRenderers.Count; i++)
             {
                 _allRenderers[i].materials = _originalMaterials[i];

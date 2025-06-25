@@ -20,7 +20,7 @@ public class EffectData
     public float duration;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="EffectData"/> class.
+    /// Initializes a new Instance of the <see cref="EffectData"/> class.
     /// </summary>
     /// <param name="effect">The effect to apply.</param>
     /// <param name="duration">The duration of the effect in seconds.</param>

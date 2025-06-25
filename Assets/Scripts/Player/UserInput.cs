@@ -3,10 +3,11 @@ using UnityEngine.InputSystem;
 
 public class UserInput : MonoBehaviour
 {
-    public static UserInput instance;
+    public static UserInput Instance;
     public static PlayerInput PlayerInput;
 
-    public Vector2 MoveInput {  get; private set; }
+    public Vector2 MoveInput { get; private set; }
+
     public bool ActionOneJustPressed { get; private set; }
     public bool ActionTwoJustPressed { get; private set; }
     public bool ActionThreeJustPressed { get; private set; }
@@ -24,7 +25,6 @@ public class UserInput : MonoBehaviour
 
     public bool MenuOpenCloseInput { get; private set; }
 
-
     private InputAction _moveAction;
     private InputAction _actionOne;
     private InputAction _actionTwo;
@@ -34,13 +34,10 @@ public class UserInput : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
+        if (Instance == null)
+            Instance = this;
 
         PlayerInput = GetComponent<PlayerInput>();
-
         SetupInputActions();
     }
 
@@ -48,6 +45,7 @@ public class UserInput : MonoBehaviour
     {
         UpdateInputs();
     }
+
     public void SetupInputActions()
     {
         _moveAction = PlayerInput.actions["Move"];
@@ -61,6 +59,7 @@ public class UserInput : MonoBehaviour
     private void UpdateInputs()
     {
         MoveInput = _moveAction.ReadValue<Vector2>();
+
         ActionOneJustPressed = _actionOne.WasPressedThisFrame();
         ActionTwoJustPressed = _actionTwo.WasPressedThisFrame();
         ActionThreeJustPressed = _actionThree.WasPressedThisFrame();
@@ -73,7 +72,7 @@ public class UserInput : MonoBehaviour
 
         ActionOneReleased = _actionOne.WasReleasedThisFrame();
         ActionTwoReleased = _actionTwo.WasReleasedThisFrame();
-        ActionThreeReleased =_actionThree.WasReleasedThisFrame();
+        ActionThreeReleased = _actionThree.WasReleasedThisFrame();
         ActionFourReleased = _actionFour.WasReleasedThisFrame();
 
         MenuOpenCloseInput = _menuOpenCloseAction.WasPressedThisFrame();

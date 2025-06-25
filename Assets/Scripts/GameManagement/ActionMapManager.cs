@@ -15,14 +15,14 @@ public class ActionMapManager : MonoBehaviour
     public void SwitchUI()
     {
         UserInput.PlayerInput.SwitchCurrentActionMap("UI");
-        UserInput.instance.SetupInputActions();
+        UserInput.Instance.SetupInputActions();
         Debug.Log(UserInput.PlayerInput.currentActionMap.name);
     }
 
     public void SwitchGame()
     {
         UserInput.PlayerInput.SwitchCurrentActionMap("Game");
-        UserInput.instance.SetupInputActions();
+        UserInput.Instance.SetupInputActions();
         Debug.Log(UserInput.PlayerInput.currentActionMap.name);
     }
 }

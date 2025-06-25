@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 public class MenuManager : MonoBehaviour
 {
-    public static MenuManager instance;
+    public static MenuManager Instance;
 
     [Header("Menu Objects")]
     [SerializeField] private GameObject _mainMenuCanvasGO;
@@ -21,9 +21,9 @@ public class MenuManager : MonoBehaviour
 
     public void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
         }
     }
 
@@ -106,7 +106,7 @@ public class MenuManager : MonoBehaviour
 
     public void OnResumePress()
     {
-        GameManager.instance.UnPause();
+        GameManager.Instance.UnPause();
     }
     #endregion
 

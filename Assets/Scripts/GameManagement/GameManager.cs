@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager instance;
+    public static GameManager Instance;
 
-    [SerializeField] private GameObject _player;
+    public GameObject _player;
 
     public bool isGameOver;
     public bool isGamePaused;
@@ -13,9 +13,9 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
         }
     }
 
@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        if (UserInput.instance.MenuOpenCloseInput && !isGameOver)
+        if (UserInput.Instance.MenuOpenCloseInput && !isGameOver)
         {
             if (isGamePaused) UnPause();
             else Pause();
@@ -38,23 +38,23 @@ public class GameManager : MonoBehaviour
 
     public void Pause()
     {
-        PauseManager.instance.PauseGame();
-        MenuManager.instance.Pause();
+        PauseManager.Instance.PauseGame();
+        MenuManager.Instance.Pause();
         ActionMapManager.instance.SwitchUI();
     }
 
     public void UnPause()
     {
-        PauseManager.instance.UnpauseGame();
-        MenuManager.instance.Unpause();
+        PauseManager.Instance.UnpauseGame();
+        MenuManager.Instance.Unpause();
         ActionMapManager.instance.SwitchGame();
     }
 
     public void GameOver()
     {
         isGameOver = true;
-        PauseManager.instance.PauseGame();
-        MenuManager.instance.OnGameOver();
+        PauseManager.Instance.PauseGame();
+        MenuManager.Instance.OnGameOver();
         ActionMapManager.instance.SwitchUI();
     }
 }

@@ -4,17 +4,17 @@ public class SceneManagerController : MonoBehaviour
 {
     public void LoadScene(string sceneName)
     {
-        FadeManager.instance.LoadScene(sceneName);
+        FadeManager.Instance.LoadScene(sceneName);
     }
 
     public void ReloadCurrentScene()
     {
-        FadeManager.instance.ReloadScene();
+        FadeManager.Instance.ReloadScene();
     }
 
     public void LoadNextScene()
     {
-        FadeManager.instance.LoadNextScene();
+        FadeManager.Instance.LoadNextScene();
     }
 
     public void QuitGame()

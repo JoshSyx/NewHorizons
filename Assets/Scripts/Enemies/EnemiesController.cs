@@ -88,7 +88,7 @@ internal class WaveSettings
 public class EnemiesController : MonoBehaviour
 {
     /// <summary>
-    /// Singleton instance of the <see cref="EnemiesController"/> class.
+    /// Singleton Instance of the <see cref="EnemiesController"/> class.
     /// </summary>
     public static EnemiesController Instance;
 

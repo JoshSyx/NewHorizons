@@ -2,30 +2,30 @@ using UnityEngine;
 
 public class PauseManager : MonoBehaviour
 {
-    public static PauseManager instance;
+    public static PauseManager Instance;
 
     public void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
         }
     }
 
     public void PauseGame()
     {
-        if (!GameManager.instance.isGamePaused)
+        if (!GameManager.Instance.isGamePaused)
         {
-            GameManager.instance.isGamePaused = true;
+            GameManager.Instance.isGamePaused = true;
             Time.timeScale = 0f;
         }
     }
 
     public void UnpauseGame()
     {
-        if (GameManager.instance.isGamePaused)
+        if (GameManager.Instance.isGamePaused)
         {
-            GameManager.instance.isGamePaused = false;
+            GameManager.Instance.isGamePaused = false;
             Time.timeScale = 1f;
         }
     }

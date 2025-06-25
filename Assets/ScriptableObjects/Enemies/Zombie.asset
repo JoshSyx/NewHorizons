@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41d6daf1248c4d9439ddc9ab6d6cfbf4, type: 3}
+  m_Name: Zombie
+  m_EditorClassIdentifier: 
+  speed: 6
+  followDistance: 0
+  distanceTolerance: 0.5
+  keepDistance: 1
+  directionSmoothness: 0.1
+  avoidanceRadius: 2
+  avoidanceStrength: 15
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 1024
+  isFlying: 0
+  flyingHeight: 5
+  verticalSmoothness: 0.2
+  equippedWeapon: {fileID: 11400000, guid: 715641c0ca22d5c4a8f6b2afbee6ee05, type: 2}
+  attackCooldown: 1.5

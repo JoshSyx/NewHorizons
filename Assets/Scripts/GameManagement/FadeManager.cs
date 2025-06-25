@@ -4,16 +4,16 @@ using System.Collections;
 
 public class FadeManager : MonoBehaviour
 {
-    public static FadeManager instance;
+    public static FadeManager Instance;
     public CanvasGroup fadeCanvasGroup;
     public float fadeDuration = 0.5f;
     private bool isFading = false;
 
     private void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
             DontDestroyOnLoad(gameObject);
 
             if (fadeCanvasGroup == null)
