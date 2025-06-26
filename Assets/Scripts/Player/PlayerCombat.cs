@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerCombat : Combat
@@ -157,7 +157,7 @@ public class PlayerCombat : Combat
 
         float spawnHeight = 1.5f;
         Vector3 spawnPosition = transform.position + Vector3.up * spawnHeight;
-        Vector3 aimDirection = transform.forward;
+        Vector3 aimDirection = GetAimAssistDirection();
         Vector3 aimTarget = spawnPosition + aimDirection * 100f;
 
         GameObject target = DetectEnemyWithAimAssist(aimAssistMaxDistance, aimAssistAngle);
@@ -178,7 +178,7 @@ public class PlayerCombat : Combat
 
         float spawnHeight = 1.5f;
         Vector3 spawnPosition = transform.position + Vector3.up * spawnHeight;
-        Vector3 aimDirection = transform.forward;
+        Vector3 aimDirection = GetAimAssistDirection();
         Vector3 aimTarget = spawnPosition + aimDirection * 100f;
 
         GameObject target = DetectEnemyWithAimAssist(aimAssistMaxDistance, aimAssistAngle);
@@ -219,7 +219,7 @@ public class PlayerCombat : Combat
     private GameObject DetectEnemyWithAimAssist(float maxDistance = 10f, float aimAssistAngle = 15f)
     {
         Vector3 rayOrigin = transform.position + Vector3.up * 1.5f;
-        Vector3 forward = transform.forward;
+        Vector3 forward = GetAimAssistDirection(); // ← This is the updated dynamic direction
         Collider[] hitColliders = Physics.OverlapSphere(rayOrigin, maxDistance);
 
         GameObject bestTarget = null;
@@ -247,6 +247,23 @@ public class PlayerCombat : Combat
         }
 
         return bestTarget;
+    }
+
+    private Vector3 GetAimAssistDirection()
+    {
+        Vector2 aimInput = UserInput.Instance.AimInput;
+        Vector2 moveInput = UserInput.Instance.MoveInput;
+
+        Vector3 inputDirection = Vector3.zero;
+
+        if (aimInput.sqrMagnitude > 0.01f)
+            inputDirection = new Vector3(aimInput.x, 0f, aimInput.y);
+        else if (moveInput.sqrMagnitude > 0.01f)
+            inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
+        else
+            inputDirection = transform.forward;
+
+        return inputDirection.normalized;
     }
 
     public GameObject GetAimAssistTarget()
