@@ -36,8 +36,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        HandleActionInputs();
-        Debug.Log(Mouse.current.position.ReadValue());
+        //HandleActionInputs();
 
     }
 
@@ -64,7 +63,7 @@ public class PlayerController : MonoBehaviour
 
         controller.Move(move * Time.deltaTime);
 
-        HandleRotation(aimInput);
+        //HandleRotation(aimInput);
     }
 
     private void HandleRotation(Vector2 aimInput)

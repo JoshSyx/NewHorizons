@@ -1,11 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class Health : MonoBehaviour
 {
     [Header("Health Settings")]
     [SerializeField] private float maxHealth = 100f;
+    [ProgressBar(0, "maxHealth")]
+    [SerializeField]
+    [ReadOnly]
     private float currentHealth;
     private bool isDead = false;
 
@@ -126,5 +130,26 @@ public class Health : MonoBehaviour
         }
 
         Destroy(gameObject);
+    }
+
+    /// <summary>
+    /// Heals the object to the target <paramref name="amount"/>.
+    /// </summary>
+    /// <example>
+    /// if <see cref="maxHealth"/> = 100
+    /// then Heal(0.9) would go 100 * 0.9
+    /// and <see cref="CurrentHealth"/> becomes 90
+    /// </example>
+    /// <param name="amount">Input should be in range from 0.01 to 1.
+    /// Determines the part of <see cref="maxHealth"/> that will be put to <see cref="currentHealth"/></param>
+    public void Heal(float amount)
+    {
+        currentHealth = Mathf.Min(maxHealth, Mathf.Max(maxHealth * amount, currentHealth));
+    }
+    
+    public void MultiplyMaxHealth(float multiplier)
+    {
+        maxHealth = Mathf.Min(1, maxHealth * multiplier);
+        Heal(1);
     }
 }

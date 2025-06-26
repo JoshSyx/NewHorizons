@@ -4,7 +4,8 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
-
+    
+    [HideInInspector]
     public GameObject _player;
 
     public bool isGameOver;
@@ -17,6 +18,7 @@ public class GameManager : MonoBehaviour
         {
             Instance = this;
         }
+        _player = GameObject.FindGameObjectWithTag("Player");
     }
 
     public void Update()
