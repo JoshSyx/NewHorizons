@@ -1,5 +1,6 @@
 public enum DamageType
 {
+    None,
     Melee,
     Ranged,
     OrbitalStrike,

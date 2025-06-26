@@ -7,7 +7,6 @@ public class ItemPickup : MonoBehaviour
     public static bool PlayerIsInPickupRange => pickupsInRange.Count > 0;
 
     [SerializeField] private Item item;
-
     private static List<ItemPickup> pickupsInRange = new();
     private static GameObject playerRef;
 
@@ -35,33 +34,24 @@ public class ItemPickup : MonoBehaviour
     {
         if (playerRef == null) return null;
 
-        // Remove destroyed/null pickups from the list
-        pickupsInRange = pickupsInRange
-            .Where(p => p != null)
-            .ToList();
+        pickupsInRange = pickupsInRange.Where(p => p != null).ToList();
 
         if (pickupsInRange.Count == 0) return null;
 
-        return pickupsInRange
-            .OrderBy(p => Vector3.Distance(p.transform.position, playerRef.transform.position))
-            .FirstOrDefault();
+        return pickupsInRange.OrderBy(p => Vector3.Distance(p.transform.position, playerRef.transform.position)).FirstOrDefault();
     }
-
 
     public void SetItem(Item newItem)
     {
         item = newItem;
-        // Optional: update visuals to match new item here
+        // Optional: update visuals
     }
-
-
 
     public static void PickupWeaponAtRange()
     {
         var pickup = GetClosestPickup();
         pickup?.Pickup();
     }
-
 
     private void Pickup()
     {
@@ -70,22 +60,19 @@ public class ItemPickup : MonoBehaviour
         var inventory = PlayerInventory.Instance;
         if (inventory == null) return;
 
-        // Remove from pickupsInRange BEFORE destroying the object
         pickupsInRange.Remove(this);
 
-        if (item is WeaponItem weapon)
+        if (item is IEquippableSlotItem slotItem)
         {
-            inventory.EquipWeaponToSlot(weapon, weapon.slot);
-            Debug.Log($"Picked up weapon {weapon.itemName} and auto-equipped to {weapon.slot} slot");
+            inventory.EquipItemToSlot(slotItem, slotItem.Slot);
+            Debug.Log($"Picked up {item.itemName} and equipped to slot {slotItem.Slot}");
         }
         else
         {
-            Debug.Log($"Picked up non-weapon item {item.itemName}");
+            Debug.Log($"Picked up non-slot item {item.itemName}");
             item.OnPickup(playerRef);
         }
 
         Destroy(gameObject);
     }
-
-
 }

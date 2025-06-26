@@ -20,7 +20,7 @@ internal class EnemiesPerWaveSettings
     /// <summary>
     /// Represents the prefab of an enemy used in spawning during a wave.
     /// </summary>
-    public Enemy enemyPrefab;
+    public EnemyController enemyPrefab;
 
     /// <summary>
     /// Represents the probability of spawning a specific enemy in a wave configuration.
@@ -85,12 +85,12 @@ internal class WaveSettings
 /// This class utilizes the Singleton pattern.
 /// It provides functionality to manage the count of active enemies and update the state when an enemy is killed.
 /// </remarks>
-public class EnemiesController : MonoBehaviour
+public class EnemySpawner : MonoBehaviour
 {
     /// <summary>
     /// Singleton Instance of the <see cref="EnemiesController"/> class.
     /// </summary>
-    public static EnemiesController Instance;
+    public static EnemySpawner Instance;
 
     /// <summary>
     /// Represents the configuration for multiple waves of enemies in the game.
@@ -161,9 +161,19 @@ public class EnemiesController : MonoBehaviour
         {
             Debug.LogError("Player object not found!");
         }
-        StartCoroutine(SpawnWave());
-        _activeEnemiesCount = waves[_currentWave].numberOfEnemies;
+
+        // Validate waves array and _currentWave index before accessing
+        if (waves != null && waves.Length > 0 && _currentWave >= 0 && _currentWave < waves.Length)
+        {
+            _activeEnemiesCount = waves[_currentWave].numberOfEnemies;
+            StartCoroutine(SpawnWave());
+        }
+        else
+        {
+            Debug.LogError("Waves array is not set up correctly or current wave index is invalid.");
+        }
     }
+
 
     /// <summary>
     /// Updates the logic for progressing through waves of enemies in the game.
@@ -238,8 +248,8 @@ public class EnemiesController : MonoBehaviour
     /// </summary>
     /// <param name="waveEnemiesSettings">An array of settings defining possible enemy prefabs
     /// and their associated spawn probabilities for the current wave.</param>
-    /// <returns>The selected <see cref="Enemy"/> prefab if available, or null if no valid selection can be made.</returns>
-    private Enemy GetRandomPrefab(EnemiesPerWaveSettings[] waveEnemiesSettings)
+    /// <returns>The selected <see cref="EnemyController"/> prefab if available, or null if no valid selection can be made.</returns>
+    private EnemyController GetRandomPrefab(EnemiesPerWaveSettings[] waveEnemiesSettings)
     {
         if (waveEnemiesSettings == null || waveEnemiesSettings.Length == 0)
             return null;

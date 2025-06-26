@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
@@ -12,6 +13,7 @@ public class Projectile : MonoBehaviour
     private bool hasHit = false;
 
     private float originalTrailTime;
+    private Vector3 velocityAtHit;
 
     private void Awake()
     {
@@ -25,58 +27,74 @@ public class Projectile : MonoBehaviour
             originalTrailTime = trail.time;
     }
 
-    public void Initialize(DamageData data, GameObject source, Vector3 velocity, WeaponItem weapon)
+    // Use interface IRangedItem to support WeaponItem, AbilityItem, etc.
+    public void Initialize(DamageData data, GameObject source, Vector3 velocity, IRangedItem rangedItem)
     {
         damageData = data;
         owner = source;
+        velocityAtHit = velocity;
 
         if (rb != null)
         {
-            rb.useGravity = weapon.useGravity;
+            rb.useGravity = rangedItem.useGravity;
             rb.linearVelocity = velocity;
         }
 
-        stickDuration = weapon.stickDuration;
-        knockbackForce = weapon.knockbackForce;
+        stickDuration = rangedItem.stickDuration;
+        knockbackForce = rangedItem.knockbackForce;
 
-        Destroy(gameObject, weapon.maxLifetime);
+        Destroy(gameObject, rangedItem.maxLifetime);
     }
 
     private void Update()
     {
-        if (!hasHit)
+        if (!hasHit && rb != null && rb.linearVelocity.sqrMagnitude > 0.01f)
         {
-            if (rb != null && rb.linearVelocity.sqrMagnitude > 0.01f)
-            {
-                transform.rotation = Quaternion.LookRotation(rb.linearVelocity);
-            }
+            transform.rotation = Quaternion.LookRotation(rb.linearVelocity);
         }
-        else
+        else if (hasHit && trail != null)
         {
-            if (trail != null)
-            {
-                // Stop emitting new trail points
-                trail.emitting = false;
-
-                // Fade out the trail over stickDuration seconds
-                trail.time = Mathf.MoveTowards(trail.time, 0f, Time.deltaTime * (originalTrailTime / stickDuration));
-            }
+            trail.emitting = false;
+            trail.time = Mathf.MoveTowards(trail.time, 0f, Time.deltaTime * (originalTrailTime / stickDuration));
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (hasHit) return;
+        if (owner == null || other.transform.IsChildOf(owner.transform)) return;
 
-        // Ignore collisions with owner and children
-        if (other.transform.IsChildOf(owner.transform))
-            return;
+        GameObject target = other.transform.root.gameObject;
 
-        if (other.TryGetComponent(out Health health))
+        if (target == null) return;
+
+        Vector3 targetPosition = target.transform.position;
+
+        Combat ownerCombat = owner.GetComponent<Combat>();
+        if (ownerCombat != null)
         {
-            Vector3 knockbackDir = (other.transform.position - owner.transform.position).normalized;
-            health.InflictDamage(damageData, knockbackDir, knockbackForce);
+            Vector3 knockbackDir = (targetPosition - transform.position).normalized;
+            ownerCombat.ApplyDamage(target, damageData, knockbackDir, knockbackForce);
         }
+        else
+        {
+            Debug.LogWarning("Projectile's owner has no Combat component.");
+        }
+
+        StartCoroutine(StickAndDestroyDelayed(other));
+    }
+
+    private IEnumerator StickAndDestroyDelayed(Collider other)
+    {
+        yield return null; // wait a frame so target destruction completes
+        StickToTarget(other);
+        Destroy(gameObject, stickDuration);
+    }
+
+
+    private void StickToTarget(Collider target)
+    {
+        hasHit = true;
 
         if (rb != null)
         {
@@ -85,12 +103,11 @@ public class Projectile : MonoBehaviour
             rb.isKinematic = true;
         }
 
-        hasHit = true;
-        transform.parent = other.transform;
+        transform.parent = target.transform;
 
         if (trail != null)
+        {
             trail.emitting = false;
-
-        Destroy(gameObject, stickDuration);
+        }
     }
 }

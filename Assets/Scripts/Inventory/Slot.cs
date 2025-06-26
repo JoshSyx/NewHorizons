@@ -1,5 +1,6 @@
-public enum WeaponSlot
+public enum Slot
 {
+    None,
     Action1,
     Action2,
     Action3,

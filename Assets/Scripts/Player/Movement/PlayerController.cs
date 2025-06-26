@@ -15,10 +15,10 @@ public class PlayerController : MonoBehaviour
 
     private PlayerCombat playerCombat;
     private PlayerDash playerDash;
-    public PlayerInput playerInput; // Reference to PlayerInput
+    public PlayerInput playerInput;
 
-    private Vector3 lastMousePosition;
-    private float mouseMoveThreshold = 1.0f; // adjust as needed
+    private Vector3 lastManualForward = Vector3.forward; // Default
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -37,8 +37,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         HandleActionInputs();
-        Debug.Log(Mouse.current.position.ReadValue());
-
+        HandleContinuousShooting();
     }
 
     private void HandleMovement()
@@ -64,60 +63,66 @@ public class PlayerController : MonoBehaviour
 
         controller.Move(move * Time.deltaTime);
 
-        HandleRotation(aimInput);
+        HandleRotation(aimInput, moveInput);
     }
 
-    private void HandleRotation(Vector2 aimInput)
+    private void HandleRotation(Vector2 aimInput, Vector2 moveInput)
     {
-        string scheme = playerInput.currentControlScheme;
+        string scheme = playerInput != null ? playerInput.currentControlScheme : "Keyboard&Mouse";
 
-        // --- Mouse aiming ---
-        Vector3 currentMousePos = Input.mousePosition;
-        if ((currentMousePos - lastMousePosition).sqrMagnitude > mouseMoveThreshold)
+        GameObject aimAssistTarget = playerCombat.GetAimAssistTarget();
+        if (aimAssistTarget != null)
         {
-            playerInput.SwitchCurrentControlScheme("Keyboard&Mouse");
-        }
-        lastMousePosition = currentMousePos;
+            Vector3 dirToTarget = aimAssistTarget.transform.position - transform.position;
+            dirToTarget.y = 0f;
 
-        if (playerInput.currentControlScheme == "Keyboard&Mouse")
-        {
-            Ray ray = Camera.main.ScreenPointToRay(currentMousePos);
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f, LayerMask.GetMask("Ground")))
+            if (dirToTarget.sqrMagnitude > 0.01f)
             {
-                Vector3 direction = hit.point - transform.position;
-                direction.y = 0f;
+                Quaternion targetRot = Quaternion.LookRotation(dirToTarget);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSmoothTime);
+                // Don't update lastManualForward here because this is aim assist rotation
+                return; // highest priority, exit early
+            }
+        }
 
-                if (direction.sqrMagnitude > 0.1f)
+        if (aimInput.sqrMagnitude > 0.01f)
+        {
+            if (scheme == "Keyboard&Mouse")
+            {
+                Ray ray = Camera.main.ScreenPointToRay(aimInput);
+                if (Physics.Raycast(ray, out RaycastHit hit, 10000f))
                 {
-                    Quaternion targetRotation = Quaternion.LookRotation(direction);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSmoothTime);
+                    Vector3 dir = hit.point - transform.position;
+                    dir.y = 0f;
+
+                    if (dir.sqrMagnitude > 0.1f)
+                    {
+                        Quaternion targetRot = Quaternion.LookRotation(dir);
+                        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSmoothTime);
+                        lastManualForward = dir.normalized; // store manual forward
+                        return;
+                    }
                 }
             }
             else
             {
-                Debug.LogWarning("[Rotation] Raycast from mouse did NOT hit ground.");
+                Vector3 aimDir = new Vector3(aimInput.x, 0f, aimInput.y);
+                if (aimDir.sqrMagnitude > 0.1f)
+                {
+                    Quaternion targetRot = Quaternion.LookRotation(aimDir);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSmoothTime);
+                    lastManualForward = aimDir.normalized; // store manual forward
+                    return;
+                }
             }
-
-            return;
         }
 
-        // --- Gamepad aiming ---
-        if (scheme == "Gamepad")
+        if (moveInput.sqrMagnitude > 0.01f)
         {
-            Vector3 aimDir = new Vector3(aimInput.x, 0f, aimInput.y);
-            if (aimDir.sqrMagnitude > 0.1f)
-            {
-                Quaternion targetRotation = Quaternion.LookRotation(aimDir);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSmoothTime);
-            }
-            return;
-        }
-
-        // --- Default fallback to movement direction ---
-        if (lastMoveDirection.sqrMagnitude > 0.1f)
-        {
-            Quaternion targetRot = Quaternion.LookRotation(lastMoveDirection);
+            Vector3 moveDir = new Vector3(moveInput.x, 0f, moveInput.y);
+            Quaternion targetRot = Quaternion.LookRotation(moveDir);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSmoothTime);
+            lastManualForward = moveDir.normalized; // store manual forward
         }
     }
 
@@ -125,49 +130,69 @@ public class PlayerController : MonoBehaviour
     {
         if (UserInput.Instance == null) return;
 
-        // Attempt pickup if player is in range and presses any action button
         if (ItemPickup.PlayerIsInPickupRange)
         {
-            if (UserInput.Instance.ActionOneJustPressed ||
-                UserInput.Instance.ActionTwoJustPressed ||
-                UserInput.Instance.ActionThreeJustPressed ||
-                UserInput.Instance.ActionFourJustPressed ||
-                UserInput.Instance.ActionFiveJustPressed ||
-                UserInput.Instance.ActionSixJustPressed)
+            if (AnyActionJustPressed())
             {
-                ItemPickup.PickupWeaponAtRange(); // Auto-pickup based on WeaponItem.slot
+                ItemPickup.PickupWeaponAtRange();
                 return;
             }
         }
 
-        // Skip action inputs while dashing
         if (playerDash != null && playerDash.IsDashing) return;
 
-        // Handle action inputs
-        if (UserInput.Instance.ActionOneJustPressed) TryPerformAction(WeaponSlot.Action1);
-        if (UserInput.Instance.ActionTwoJustPressed) TryPerformAction(WeaponSlot.Action2);
-        if (UserInput.Instance.ActionThreeJustPressed) TryPerformAction(WeaponSlot.Action3);
-        if (UserInput.Instance.ActionFourJustPressed) TryPerformAction(WeaponSlot.Action4);
-        if (UserInput.Instance.ActionFiveJustPressed) TryPerformAction(WeaponSlot.Action5);
-        if (UserInput.Instance.ActionSixJustPressed) TryPerformAction(WeaponSlot.Action6);
+        TryPerformAction(Slot.Action1, UserInput.Instance.ActionOneJustPressed);
+        TryPerformAction(Slot.Action2, UserInput.Instance.ActionTwoJustPressed);
+        TryPerformAction(Slot.Action3, UserInput.Instance.ActionThreeJustPressed);
+        TryPerformAction(Slot.Action4, UserInput.Instance.ActionFourJustPressed);
+        TryPerformAction(Slot.Action5, UserInput.Instance.ActionFiveJustPressed);
+        TryPerformAction(Slot.Action6, UserInput.Instance.ActionSixJustPressed);
     }
 
-    private void TryPerformAction(WeaponSlot slot)
+    private void TryPerformAction(Slot slot, bool pressed)
     {
-        var weapon = PlayerInventory.Instance.GetEquippedWeapon(slot);
-        if (weapon == null)
+        if (!pressed) return;
+        PlayerInventory.Instance.SetLastSelectedSlot(slot);
+        var item = PlayerInventory.Instance.GetEquippedItem(slot);
+        if (item == null)
         {
-            Debug.LogWarning($"No weapon equipped in slot: {slot}");
+            Debug.LogWarning($"No item equipped in slot: {slot}");
             return;
         }
 
-        if (weapon is WeaponItem weaponItem && weaponItem.IsDashAbility)
+        if (item is AbilityItem ability && ability.abilityType == AbilityType.Dash)
         {
             playerDash?.TryDash(lastMoveDirection.normalized);
         }
         else
         {
             playerCombat?.AttackWithSlot(slot);
+        }
+    }
+
+    private bool AnyActionJustPressed()
+    {
+        var input = UserInput.Instance;
+        return input.ActionOneJustPressed || input.ActionTwoJustPressed ||
+               input.ActionThreeJustPressed || input.ActionFourJustPressed ||
+               input.ActionFiveJustPressed || input.ActionSixJustPressed;
+    }
+
+    private void HandleContinuousShooting()
+    {
+        if (UserInput.Instance.LeftTriggerBeingHeld)
+        {
+            Slot lastSlot = PlayerInventory.Instance.GetLastSelectedSlot();
+            var item = PlayerInventory.Instance.GetEquippedItem(lastSlot);
+
+            if (item is WeaponItem weapon && weapon.IsRanged)
+            {
+                playerCombat.StartShootingWithWeapon(weapon);
+            }
+        }
+        else
+        {
+            playerCombat.StopShooting();
         }
     }
 }

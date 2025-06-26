@@ -3,15 +3,25 @@ using System.Collections.Generic;
 
 public class Combat : MonoBehaviour
 {
-    // Apply damage helper
+    // Apply damage and knockback here
     public void ApplyDamage(GameObject target, DamageData data, Vector3 knockbackDir = default, float knockbackForce = 0f)
     {
         if (!target.TryGetComponent(out Health targetHealth)) return;
 
-        targetHealth.InflictDamage(data, knockbackDir, knockbackForce);
+        // Apply damage
+        targetHealth.InflictDamage(data);
+
+        // Apply knockback if needed
+        if (knockbackDir != Vector3.zero && knockbackForce > 0f)
+        {
+            if (target.TryGetComponent(out Rigidbody rb))
+            {
+                rb.AddForce(knockbackDir.normalized * knockbackForce, ForceMode.Impulse);
+            }
+        }
     }
 
-    // Check melee hits based on angle and range, returns hit GameObjects
+    // Melee hit detection
     protected List<GameObject> GetMeleeHits(Vector3 origin, Vector3 forward, float range, float angle, LayerMask layerMask, string targetTag)
     {
         List<GameObject> hitTargets = new List<GameObject>();
@@ -32,21 +42,20 @@ public class Combat : MonoBehaviour
         return hitTargets;
     }
 
-    // Basic ranged attack spawn helper
-    protected void PerformRangedAttack(WeaponItem weapon, Vector3 origin, Vector3 targetPosition)
+    // Unified ranged attack spawn for any IRangedItem (WeaponItem or AbilityItem)
+    protected void PerformRangedAttack(IRangedItem rangedItem, Vector3 origin, Vector3 targetPosition)
     {
-        if (weapon.projectilePrefab == null)
+        if (rangedItem.projectilePrefab == null)
         {
-            Debug.LogWarning("Projectile prefab not set on weapon: " + weapon.itemName);
+            Debug.LogWarning("Projectile prefab not set on ranged item.");
             return;
         }
 
         Vector3 direction = (targetPosition - origin).normalized;
-        Vector3 projectileVelocity = direction * weapon.projectileSpeed;
-
-        // Rotate projectile to face direction and align model correctly (e.g., rotate -90 X for arrow)
+        Vector3 projectileVelocity = direction * rangedItem.projectileSpeed;
         Quaternion rotation = Quaternion.LookRotation(direction) * Quaternion.Euler(-90f, 0f, 0f);
-        GameObject projectile = Instantiate(weapon.projectilePrefab, origin, rotation);
+
+        GameObject projectile = Instantiate(rangedItem.projectilePrefab, origin, rotation);
 
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
         if (rb != null)
@@ -54,11 +63,13 @@ public class Combat : MonoBehaviour
 
         Projectile projScript = projectile.GetComponent<Projectile>();
         if (projScript != null)
+        {
             projScript.Initialize(
-                weapon.GetDamageData(gameObject),
+                rangedItem.GetDamageData(gameObject),
                 gameObject,
                 projectileVelocity,
-                weapon
+                rangedItem
             );
+        }
     }
 }

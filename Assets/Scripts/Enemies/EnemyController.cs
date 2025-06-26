@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class Enemy : Health
+public class EnemyController : MonoBehaviour
 {
     public EnemyData enemyData;
 
@@ -24,20 +24,11 @@ public class Enemy : Health
     private int enemyID;
     private static int enemyCounter = 0;
 
-    // Knockback handling
-    private float knockbackTimer = 0f;
-    private bool IsKnockedBack => knockbackTimer > 0f;
-
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.constraints = RigidbodyConstraints.FreezeRotation;
-
-        // Fix gravity usage for flying vs ground enemies
-        if (!enemyData.isFlying)
-            rb.useGravity = true;
-        else
-            rb.useGravity = false;
+        rb.useGravity = !enemyData.isFlying;
 
         enemyID = enemyCounter++;
 
@@ -49,18 +40,11 @@ public class Enemy : Health
 
     void Update()
     {
-        if (IsKnockedBack)
-        {
-            knockbackTimer -= Time.deltaTime;
-            return; // Skip AI state updates while knocked back
-        }
-
         if (playerObject == null) return;
         if ((Time.frameCount + enemyID) % 3 != 0) return;
 
         if (!CanSeePlayer())
         {
-            // Idle or do some patrol/wander behavior here if you want
             currentState = DodgeState.Idle;
             stateTimer = idleDuration;
             return;
@@ -77,14 +61,8 @@ public class Enemy : Health
 
     void FixedUpdate()
     {
-        if (IsKnockedBack) return;
         if (playerObject == null || enemyData == null) return;
-
-        if (enemyData.isFlying)
-        {
-            // Flying enemies do NOT move here; handled by EnemyCombat
-            return;
-        }
+        if (enemyData.isFlying) return;
 
         Vector3 toPlayer = playerObject.transform.position - transform.position;
         float distance = toPlayer.magnitude;
@@ -99,7 +77,6 @@ public class Enemy : Health
 
         currentMoveDir = Vector3.Lerp(currentMoveDir, targetMoveDir, Time.fixedDeltaTime / enemyData.directionSmoothness);
 
-        // Avoidance (throttled and smoothed)
         avoidanceUpdateTimer -= Time.fixedDeltaTime;
         if (avoidanceUpdateTimer <= 0f)
         {
@@ -110,12 +87,9 @@ public class Enemy : Health
         smoothedAvoidanceForce = Vector3.Lerp(smoothedAvoidanceForce, lastAvoidanceForce, Time.fixedDeltaTime / enemyData.directionSmoothness);
 
         Vector3 finalMoveDir = currentMoveDir + smoothedAvoidanceForce;
-
-        // For ground enemies discard vertical force
         finalMoveDir.y = 0f;
 
         Vector3 move = finalMoveDir.normalized * enemyData.speed * Time.fixedDeltaTime;
-
         rb.MovePosition(rb.position + move);
 
         Vector3 flatDir = new Vector3(toPlayer.x, 0f, toPlayer.z);
@@ -144,8 +118,7 @@ public class Enemy : Health
             force += away.normalized * strength * enemyData.avoidanceStrength;
         }
 
-        force.y = 0f; // ensure no vertical force for ground enemies
-
+        force.y = 0f;
         return force;
     }
 
@@ -158,7 +131,8 @@ public class Enemy : Health
             return;
         }
 
-        if (distance < enemyData.followDistance - enemyData.distanceTolerance || distance > enemyData.followDistance + enemyData.distanceTolerance)
+        if (distance < enemyData.followDistance - enemyData.distanceTolerance ||
+            distance > enemyData.followDistance + enemyData.distanceTolerance)
         {
             currentState = DodgeState.AdjustDistance;
             stateTimer = 0.3f;
@@ -194,13 +168,6 @@ public class Enemy : Health
             return Vector3.zero;
     }
 
-    // Call this method to apply knockback force & start knockback timer
-    public void ApplyKnockback(Vector3 force, float duration = 1f)
-    {
-        rb.AddForce(force, ForceMode.Impulse);
-        knockbackTimer = duration;
-    }
-
     private bool CanSeePlayer()
     {
         if (playerObject == null || enemyData == null) return false;
@@ -208,35 +175,20 @@ public class Enemy : Health
         Vector3 toPlayer = playerObject.transform.position - transform.position;
         float distanceToPlayer = toPlayer.magnitude;
 
-        // Use visionDistance from EnemyData
-        if (distanceToPlayer > enemyData.visionDistance)
-            return false;
+        if (distanceToPlayer > enemyData.visionDistance) return false;
 
-        // Use visionAngle from EnemyData
-        Vector3 forward = transform.forward;
-        float angleToPlayer = Vector3.Angle(forward, toPlayer);
-        if (angleToPlayer > enemyData.visionAngle / 2f)
-            return false;
+        float angleToPlayer = Vector3.Angle(transform.forward, toPlayer);
+        if (angleToPlayer > enemyData.visionAngle / 2f) return false;
 
-        // Raycast for line of sight
         RaycastHit hit;
-        Vector3 origin = transform.position + Vector3.up * 1.5f; // Adjust eye height as needed
+        Vector3 origin = transform.position + Vector3.up * 1.5f;
         Vector3 direction = toPlayer.normalized;
 
         if (Physics.Raycast(origin, direction, out hit, enemyData.visionDistance))
         {
-            if (hit.collider.gameObject != playerObject)
-            {
-                // Something blocking view (wall, obstacle, etc.)
-                return false;
-            }
-        }
-        else
-        {
-            return false;
+            return hit.collider.gameObject == playerObject;
         }
 
-        return true;
+        return false;
     }
-
 }

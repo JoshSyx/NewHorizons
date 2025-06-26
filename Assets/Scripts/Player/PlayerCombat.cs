@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,25 +14,39 @@ public class PlayerCombat : Combat
     [SerializeField] private float aimAssistAngle = 15f;
 
     [Header("Melee Settings")]
-    [SerializeField] private LayerMask enemyLayerMask; // Assign Enemy layer in Inspector
+    [SerializeField] private LayerMask enemyLayerMask;
 
     private WeaponItem lastUsedWeapon;
     public WeaponItem LastUsedWeapon => lastUsedWeapon;
 
-    private Dictionary<WeaponItem, float> weaponCooldownTimers = new Dictionary<WeaponItem, float>();
+    private Dictionary<WeaponItem, float> weaponCooldownTimers = new();
+
+    private WeaponItem currentShootingWeapon;
+    private float shootingCooldownTimer = 0f;
+    private bool isShooting = false;
 
     private void Update()
     {
-        List<WeaponItem> keys = new List<WeaponItem>(weaponCooldownTimers.Keys);
+        var keys = new List<WeaponItem>(weaponCooldownTimers.Keys);
         foreach (var weapon in keys)
         {
             weaponCooldownTimers[weapon] -= Time.deltaTime;
             if (weaponCooldownTimers[weapon] <= 0f)
                 weaponCooldownTimers.Remove(weapon);
         }
+
+        if (isShooting && currentShootingWeapon != null)
+        {
+            shootingCooldownTimer -= Time.deltaTime;
+            if (shootingCooldownTimer <= 0f && !IsWeaponOnCooldown(currentShootingWeapon))
+            {
+                PerformRangedAttackWithWeapon(currentShootingWeapon);
+                shootingCooldownTimer = currentShootingWeapon.cooldownDuration;
+            }
+        }
     }
 
-    public void AttackWithSlot(WeaponSlot slot)
+    public void AttackWithSlot(Slot slot)
     {
         if (inventory == null)
         {
@@ -41,58 +54,54 @@ public class PlayerCombat : Combat
             return;
         }
 
-        WeaponItem weapon = inventory.GetEquippedWeapon(slot);
-        if (weapon == null)
+        var equippedItem = inventory.GetEquippedItem(slot);
+        if (equippedItem == null)
         {
-            Debug.Log($"No weapon equipped in the {slot} slot.");
+            Debug.Log($"No item equipped in the {slot} slot.");
             return;
         }
 
-        if (IsWeaponOnCooldown(weapon))
+        if (equippedItem is WeaponItem weapon)
         {
-            Debug.Log($"Weapon {weapon.itemName} is on cooldown.");
-            return;
+            if (IsWeaponOnCooldown(weapon))
+            {
+                Debug.Log($"Weapon {weapon.itemName} is on cooldown.");
+                return;
+            }
+
+            lastUsedWeapon = weapon;
+
+            if (weapon.IsMelee)
+                PerformMeleeAttack(weapon, weapon.knockbackForce);
+            else if (weapon.IsRanged)
+                PerformRangedAttackWithWeapon(weapon);
+
+            StartWeaponCooldown(weapon);
         }
-
-        lastUsedWeapon = weapon;
-
-        if (weapon.IsMelee)
+        else if (equippedItem is AbilityItem ability)
         {
-            PerformMeleeAttack(weapon);
+            switch (ability.abilityType)
+            {
+                case AbilityType.Melee:
+                    PerformMeleeAttack(ability, ability.knockbackForce);
+                    break;
+                case AbilityType.Ranged:
+                    PerformRangedAttackWithAbility(ability);
+                    break;
+                case AbilityType.Dash:
+                    break;
+                default:
+                    Debug.Log($"Unhandled ability type: {ability.abilityType}");
+                    break;
+            }
         }
         else
         {
-            GameObject enemy = DetectEnemyWithAimAssist(aimAssistMaxDistance, aimAssistAngle);
-            if (enemy != null)
-            {
-                DamageData data = weapon.GetDamageData(gameObject);
-                Vector3 knockbackDir = (enemy.transform.position - transform.position).normalized;
-                float knockbackForce = 3f;
-
-                ApplyDamage(enemy, data, knockbackDir, knockbackForce);
-
-                Debug.Log($"Used {slot} weapon: {weapon.itemName} | Damage: {data.FinalAmount}");
-            }
-            else
-            {
-                Debug.Log("No enemy detected in front.");
-            }
+            Debug.LogWarning($"Equipped item in slot {slot} is not a WeaponItem or AbilityItem.");
         }
-
-        StartWeaponCooldown(weapon);
     }
 
-    private bool IsWeaponOnCooldown(WeaponItem weapon)
-    {
-        return weaponCooldownTimers.ContainsKey(weapon) && weaponCooldownTimers[weapon] > 0f;
-    }
-
-    private void StartWeaponCooldown(WeaponItem weapon)
-    {
-        weaponCooldownTimers[weapon] = weapon.cooldownDuration;
-    }
-
-    private void PerformMeleeAttack(WeaponItem meleeWeapon)
+    private void PerformMeleeAttack(WeaponItem meleeWeapon, float knockbackForce)
     {
         Vector3 origin = transform.position + Vector3.up * 1.0f;
         Vector3 forward = transform.forward;
@@ -106,8 +115,6 @@ public class PlayerCombat : Combat
         {
             DamageData data = meleeWeapon.GetDamageData(gameObject);
             Vector3 knockbackDir = (enemyObj.transform.position - transform.position).normalized;
-            float knockbackForce = 5f;
-
             ApplyDamage(enemyObj, data, knockbackDir, knockbackForce);
             hitCount++;
         }
@@ -119,21 +126,89 @@ public class PlayerCombat : Combat
         ShowMeleeSweepVisual(meleeRange, meleeAngle);
     }
 
+    private void PerformMeleeAttack(AbilityItem meleeAbility, float knockbackForce)
+    {
+        Vector3 origin = transform.position + Vector3.up * 1.0f;
+        Vector3 forward = transform.forward;
+        float meleeRange = meleeAbility.MeleeRange;
+        float meleeAngle = meleeAbility.MeleeAngle;
+
+        List<GameObject> hitEnemies = GetMeleeHits(origin, forward, meleeRange, meleeAngle, enemyLayerMask, "Enemy");
+
+        int hitCount = 0;
+        foreach (var enemyObj in hitEnemies)
+        {
+            DamageData data = meleeAbility.GetDamageData(gameObject);
+            Vector3 knockbackDir = (enemyObj.transform.position - transform.position).normalized;
+            ApplyDamage(enemyObj, data, knockbackDir, knockbackForce);
+            hitCount++;
+        }
+
+        Debug.Log(hitCount > 0
+            ? $"Melee ability hit {hitCount} enemies with {meleeAbility.itemName}"
+            : "Melee ability hit no enemies.");
+
+        ShowMeleeSweepVisual(meleeRange, meleeAngle);
+    }
+
+    private void PerformRangedAttackWithWeapon(WeaponItem weapon)
+    {
+        if (weapon == null || !weapon.IsRanged) return;
+
+        float spawnHeight = 1.5f;
+        Vector3 spawnPosition = transform.position + Vector3.up * spawnHeight;
+        Vector3 aimDirection = transform.forward;
+        Vector3 aimTarget = spawnPosition + aimDirection * 100f;
+
+        GameObject target = DetectEnemyWithAimAssist(aimAssistMaxDistance, aimAssistAngle);
+        if (target != null)
+        {
+            aimTarget = new Vector3(target.transform.position.x, spawnHeight, target.transform.position.z);
+        }
+
+        base.PerformRangedAttack(weapon, spawnPosition, aimTarget);
+
+        lastUsedWeapon = weapon;
+        StartWeaponCooldown(weapon);
+    }
+
+    private void PerformRangedAttackWithAbility(AbilityItem ability)
+    {
+        if (ability == null || ability.projectilePrefab == null) return;
+
+        float spawnHeight = 1.5f;
+        Vector3 spawnPosition = transform.position + Vector3.up * spawnHeight;
+        Vector3 aimDirection = transform.forward;
+        Vector3 aimTarget = spawnPosition + aimDirection * 100f;
+
+        GameObject target = DetectEnemyWithAimAssist(aimAssistMaxDistance, aimAssistAngle);
+        if (target != null)
+        {
+            aimTarget = new Vector3(target.transform.position.x, spawnHeight, target.transform.position.z);
+        }
+
+        base.PerformRangedAttack(ability, spawnPosition, aimTarget);
+    }
+
+    private bool IsWeaponOnCooldown(WeaponItem weapon)
+    {
+        return weaponCooldownTimers.TryGetValue(weapon, out float cooldown) && cooldown > 0f;
+    }
+
+    private void StartWeaponCooldown(WeaponItem weapon)
+    {
+        weaponCooldownTimers[weapon] = weapon.cooldownDuration;
+    }
+
     private void ShowMeleeSweepVisual(float range, float angle)
     {
-        if (sliceMeshPrefab == null)
-        {
-            Debug.LogWarning("SliceMesh prefab not assigned!");
-            return;
-        }
+        if (sliceMeshPrefab == null) return;
 
         Vector3 position = transform.position + Vector3.up * 1.0f;
         Quaternion rotation = Quaternion.LookRotation(transform.forward, Vector3.up);
-
         GameObject slice = Instantiate(sliceMeshPrefab, position, rotation);
 
-        SliceMesh sliceMesh = slice.GetComponent<SliceMesh>();
-        if (sliceMesh != null)
+        if (slice.TryGetComponent(out SliceMesh sliceMesh))
         {
             sliceMesh.radius = range;
             sliceMesh.angle = angle;
@@ -145,16 +220,15 @@ public class PlayerCombat : Combat
     {
         Vector3 rayOrigin = transform.position + Vector3.up * 1.5f;
         Vector3 forward = transform.forward;
-
         Collider[] hitColliders = Physics.OverlapSphere(rayOrigin, maxDistance);
+
         GameObject bestTarget = null;
         float closestAngle = aimAssistAngle;
 
         foreach (var collider in hitColliders)
         {
             GameObject rootObj = collider.transform.root.gameObject;
-            if (!rootObj.CompareTag("Enemy"))
-                continue;
+            if (!rootObj.CompareTag("Enemy")) continue;
 
             Vector3 directionToEnemy = (rootObj.transform.position - rayOrigin).normalized;
             float angle = Vector3.Angle(forward, directionToEnemy);
@@ -180,43 +254,21 @@ public class PlayerCombat : Combat
         return DetectEnemyWithAimAssist(aimAssistMaxDistance, aimAssistAngle);
     }
 
-    private void OnDrawGizmosSelected()
+    public void StartShootingWithWeapon(WeaponItem weapon)
     {
-        if (lastUsedWeapon == null || !lastUsedWeapon.IsMelee)
-            return;
+        if (weapon == null || !weapon.IsRanged) return;
 
-        Gizmos.color = Color.red;
-        Vector3 origin = transform.position + Vector3.up * 1.0f;
-        float range = lastUsedWeapon.MeleeRange;
-        float angle = lastUsedWeapon.MeleeAngle;
-
-        Gizmos.DrawWireSphere(origin, range);
-
-        Vector3 forward = transform.forward;
-        Vector3 leftDir = Quaternion.Euler(0, -angle / 2f, 0) * forward * range;
-        Vector3 rightDir = Quaternion.Euler(0, angle / 2f, 0) * forward * range;
-
-        Gizmos.DrawLine(origin, origin + leftDir);
-        Gizmos.DrawLine(origin, origin + rightDir);
+        if (currentShootingWeapon != weapon)
+        {
+            currentShootingWeapon = weapon;
+            shootingCooldownTimer = 0f;
+            isShooting = true;
+        }
     }
 
-    private void OnDrawGizmos()
+    public void StopShooting()
     {
-        if (lastUsedWeapon == null || !lastUsedWeapon.IsMelee)
-            return;
-
-        Gizmos.color = Color.green;
-
-        Vector3 origin = transform.position + Vector3.up * 1.0f;
-        float range = lastUsedWeapon.MeleeRange;
-        float angle = lastUsedWeapon.MeleeAngle;
-
-        Vector3 forward = transform.forward;
-
-        Vector3 leftEdgeDir = Quaternion.Euler(0, -angle / 2f, 0) * forward;
-        Vector3 rightEdgeDir = Quaternion.Euler(0, angle / 2f, 0) * forward;
-
-        Gizmos.DrawRay(origin, leftEdgeDir * range);
-        Gizmos.DrawRay(origin, rightEdgeDir * range);
+        isShooting = false;
+        currentShootingWeapon = null;
     }
 }

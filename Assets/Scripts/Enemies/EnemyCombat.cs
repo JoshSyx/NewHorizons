@@ -15,7 +15,7 @@ public class EnemyCombat : Combat
 
     private void Awake()
     {
-        Enemy enemy = GetComponent<Enemy>();
+        EnemyController enemy = GetComponent<EnemyController>();
         if (enemy != null) enemyData = enemy.enemyData;
     }
     private void Start()

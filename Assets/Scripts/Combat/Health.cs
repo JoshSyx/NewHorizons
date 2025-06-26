@@ -21,9 +21,6 @@ public class Health : MonoBehaviour
     public float CurrentHealth => currentHealth;
     public bool IsAlive => currentHealth > 0f;
 
-    [Header("Knockback")]
-    [SerializeField] private float defaultKnockbackForce = 5f;
-
     protected virtual void Awake()
     {
         currentHealth = maxHealth;
@@ -45,13 +42,7 @@ public class Health : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Inflict damage and optionally apply knockback.
-    /// </summary>
-    /// <param name="damageData">Contains final damage amount and source.</param>
-    /// <param name="knockbackDir">Direction to apply knockback. Optional.</param>
-    /// <param name="force">Force of knockback. If 0, uses default.</param>
-    public void InflictDamage(DamageData damageData, Vector3? knockbackDir = null, float force = 0f)
+    public void InflictDamage(DamageData damageData)
     {
         if (isDead) return;
 
@@ -60,17 +51,6 @@ public class Health : MonoBehaviour
         if (flashCoroutine != null)
             StopCoroutine(flashCoroutine);
         flashCoroutine = StartCoroutine(FlashMaterial(getHit, 0.15f));
-
-        // Knockback
-        if (knockbackDir.HasValue)
-        {
-            Rigidbody rb = GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                float knockbackStrength = force > 0f ? force : defaultKnockbackForce;
-                rb.AddForce(knockbackDir.Value.normalized * knockbackStrength, ForceMode.Impulse);
-            }
-        }
 
         if (currentHealth == 0f)
         {

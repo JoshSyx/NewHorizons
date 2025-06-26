@@ -9,17 +9,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 569ccfe848f96b74ca3320c4a8cabe91, type: 3}
-  m_Name: BasicAttack
+  m_Script: {fileID: 11500000, guid: 056d56f960dddd24a93a45a465062b88, type: 3}
+  m_Name: Dash
   m_EditorClassIdentifier: 
-  itemName: BasicAttack
-  icon: {fileID: 21300000, guid: 88178ba067e373a45895bc4b20b6d342, type: 3}
-  itemType: 0
+  itemName: 
+  icon: {fileID: 0}
+  itemType: 1
   worldModelPrefab: {fileID: 0}
-  slot: 0
-  weaponWorldModelPrefab: {fileID: 0}
-  baseDamage: 2
-  damageType: 1
+  slot: 3
+  abilityWorldModelPrefab: {fileID: 0}
+  abilityType: 1
+  damageType: 0
+  baseDamage: 0
+  dashSpeed: 25
+  dashDuration: 0.2
+  dashCooldown: 1
   MeleeRange: 2
   MeleeAngle: 90
   RangedDistance: 20

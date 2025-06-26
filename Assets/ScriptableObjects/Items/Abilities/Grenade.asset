@@ -17,10 +17,16 @@ MonoBehaviour:
   itemType: 0
   worldModelPrefab: {fileID: 0}
   slot: 2
+  weaponWorldModelPrefab: {fileID: 0}
   baseDamage: 10
-  damageType: 3
-  IsDashAbility: 0
+  damageType: 4
   MeleeRange: 2
   MeleeAngle: 90
   RangedDistance: 20
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 10
+  useGravity: 1
+  stickDuration: 5
+  maxLifetime: 20
+  knockbackForce: 3
   cooldownDuration: 1

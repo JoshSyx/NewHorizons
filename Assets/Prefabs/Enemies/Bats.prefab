@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8779970637488928843}
+  - component: {fileID: -3818334936984325018}
   - component: {fileID: 4778411783762858435}
   - component: {fileID: 8485243411838976090}
   - component: {fileID: 7882736080698519855}
@@ -36,6 +37,22 @@ Transform:
   - {fileID: 7168224252014830732}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-3818334936984325018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3553088143777831068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60ea719778c13614f8bf9e02de6dee77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+  idle: {fileID: 2100000, guid: bbc83f9e2b6f95e428a02a349fbefc20, type: 2}
+  getHit: {fileID: 2100000, guid: 951b8304f139d6c41ab5077db2bf7837, type: 2}
+  die: {fileID: 2100000, guid: 800c642ad61312c4897b95220d328195, type: 2}
 --- !u!114 &4778411783762858435
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48,11 +65,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe0a74dc38ae39942a6e092357500713, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
-  idle: {fileID: 2100000, guid: bbc83f9e2b6f95e428a02a349fbefc20, type: 2}
-  getHit: {fileID: 2100000, guid: 951b8304f139d6c41ab5077db2bf7837, type: 2}
-  die: {fileID: 2100000, guid: 800c642ad61312c4897b95220d328195, type: 2}
-  defaultKnockbackForce: 5
   enemyData: {fileID: 11400000, guid: 38b326567d3bc8748a5943e1fac31c43, type: 2}
 --- !u!95 &8485243411838976090
 Animator:

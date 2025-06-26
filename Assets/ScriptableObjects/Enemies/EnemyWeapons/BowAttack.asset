@@ -16,10 +16,10 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 9c84d42666a102248b03855d9c9655ab, type: 3}
   itemType: 0
   worldModelPrefab: {fileID: 0}
-  slot: 1
+  slot: 0
+  weaponWorldModelPrefab: {fileID: 0}
   baseDamage: 4
-  damageType: 1
-  IsDashAbility: 0
+  damageType: 2
   MeleeRange: 2
   MeleeAngle: 90
   RangedDistance: 20

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum ItemType { Weapon, Consumable, Powerup }
+public enum ItemType { Weapon, Ability, Consumable }
 
 public abstract class Item : ScriptableObject
 {
