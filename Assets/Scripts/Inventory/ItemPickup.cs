@@ -1,27 +1,23 @@
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class ItemPickup : MonoBehaviour
 {
-    private static ItemPickup currentPickup = null;
-
-    public static bool PlayerIsInPickupRange => currentPickup != null;
+    public static bool PlayerIsInPickupRange => pickupsInRange.Count > 0;
 
     [SerializeField] private Item item;
 
-    private GameObject _player;
-
-    public void SetItem(Item newItem)
-    {
-        item = newItem;
-        // Optional: update visuals to match new item here
-    }
+    private static List<ItemPickup> pickupsInRange = new();
+    private static GameObject playerRef;
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            currentPickup = this;
-            _player = other.gameObject;
+            if (!pickupsInRange.Contains(this))
+                pickupsInRange.Add(this);
+            playerRef = other.gameObject;
         }
     }
 
@@ -29,37 +25,67 @@ public class ItemPickup : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            if (currentPickup == this)
-                currentPickup = null;
-            _player = null;
+            pickupsInRange.Remove(this);
+            if (pickupsInRange.Count == 0)
+                playerRef = null;
         }
     }
 
-    public static void PickupWeaponAtRange(WeaponSlot slot)
+    public static ItemPickup GetClosestPickup()
     {
-        if (currentPickup == null) return;
-        currentPickup.Pickup(slot);
+        if (playerRef == null) return null;
+
+        // Remove destroyed/null pickups from the list
+        pickupsInRange = pickupsInRange
+            .Where(p => p != null)
+            .ToList();
+
+        if (pickupsInRange.Count == 0) return null;
+
+        return pickupsInRange
+            .OrderBy(p => Vector3.Distance(p.transform.position, playerRef.transform.position))
+            .FirstOrDefault();
     }
 
-    private void Pickup(WeaponSlot slot)
+
+    public void SetItem(Item newItem)
     {
-        if (_player == null || item == null) return;
+        item = newItem;
+        // Optional: update visuals to match new item here
+    }
+
+
+
+    public static void PickupWeaponAtRange()
+    {
+        var pickup = GetClosestPickup();
+        pickup?.Pickup();
+    }
+
+
+    private void Pickup()
+    {
+        if (playerRef == null || item == null) return;
 
         var inventory = PlayerInventory.Instance;
         if (inventory == null) return;
 
+        // Remove from pickupsInRange BEFORE destroying the object
+        pickupsInRange.Remove(this);
+
         if (item is WeaponItem weapon)
         {
-            inventory.EquipWeaponToSlot(weapon, slot);
-            Debug.Log($"Picked up weapon {weapon.itemName} and equipped to {slot} slot");
+            inventory.EquipWeaponToSlot(weapon, weapon.slot);
+            Debug.Log($"Picked up weapon {weapon.itemName} and auto-equipped to {weapon.slot} slot");
         }
         else
         {
             Debug.Log($"Picked up non-weapon item {item.itemName}");
-            item.OnPickup(_player);
+            item.OnPickup(playerRef);
         }
 
         Destroy(gameObject);
-        currentPickup = null;
     }
+
+
 }

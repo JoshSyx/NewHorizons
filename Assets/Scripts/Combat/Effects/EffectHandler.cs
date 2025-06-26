@@ -4,7 +4,7 @@ using UnityEngine;
 
 #region EffectData
 /// <summary>
-/// Represents data for an effect with its remaining duration.
+/// Represents enemyData for an effect with its remaining duration.
 /// </summary>
 [System.Serializable]
 public class EffectData

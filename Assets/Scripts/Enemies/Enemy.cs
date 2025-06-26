@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Enemy : Health
 {
-    public EnemyData data;
+    public EnemyData enemyData;
 
     private GameObject playerObject;
     private Rigidbody rb;
@@ -34,7 +34,7 @@ public class Enemy : Health
         rb.constraints = RigidbodyConstraints.FreezeRotation;
 
         // Fix gravity usage for flying vs ground enemies
-        if (!data.isFlying)
+        if (!enemyData.isFlying)
             rb.useGravity = true;
         else
             rb.useGravity = false;
@@ -58,6 +58,14 @@ public class Enemy : Health
         if (playerObject == null) return;
         if ((Time.frameCount + enemyID) % 3 != 0) return;
 
+        if (!CanSeePlayer())
+        {
+            // Idle or do some patrol/wander behavior here if you want
+            currentState = DodgeState.Idle;
+            stateTimer = idleDuration;
+            return;
+        }
+
         stateTimer -= Time.deltaTime;
         if (stateTimer <= 0f)
         {
@@ -70,9 +78,9 @@ public class Enemy : Health
     void FixedUpdate()
     {
         if (IsKnockedBack) return;
-        if (playerObject == null || data == null) return;
+        if (playerObject == null || enemyData == null) return;
 
-        if (data.isFlying)
+        if (enemyData.isFlying)
         {
             // Flying enemies do NOT move here; handled by EnemyCombat
             return;
@@ -89,7 +97,7 @@ public class Enemy : Health
             _ => AdjustDistance(direction, distance)
         };
 
-        currentMoveDir = Vector3.Lerp(currentMoveDir, targetMoveDir, Time.fixedDeltaTime / data.directionSmoothness);
+        currentMoveDir = Vector3.Lerp(currentMoveDir, targetMoveDir, Time.fixedDeltaTime / enemyData.directionSmoothness);
 
         // Avoidance (throttled and smoothed)
         avoidanceUpdateTimer -= Time.fixedDeltaTime;
@@ -99,14 +107,14 @@ public class Enemy : Health
             lastAvoidanceForce = Vector3.Lerp(lastAvoidanceForce, newAvoidance, 0.5f);
             avoidanceUpdateTimer = 0.2f + Random.Range(0f, 0.05f);
         }
-        smoothedAvoidanceForce = Vector3.Lerp(smoothedAvoidanceForce, lastAvoidanceForce, Time.fixedDeltaTime / data.directionSmoothness);
+        smoothedAvoidanceForce = Vector3.Lerp(smoothedAvoidanceForce, lastAvoidanceForce, Time.fixedDeltaTime / enemyData.directionSmoothness);
 
         Vector3 finalMoveDir = currentMoveDir + smoothedAvoidanceForce;
 
         // For ground enemies discard vertical force
         finalMoveDir.y = 0f;
 
-        Vector3 move = finalMoveDir.normalized * data.speed * Time.fixedDeltaTime;
+        Vector3 move = finalMoveDir.normalized * enemyData.speed * Time.fixedDeltaTime;
 
         rb.MovePosition(rb.position + move);
 
@@ -121,7 +129,7 @@ public class Enemy : Health
     private Vector3 CalculateAvoidanceForce()
     {
         Vector3 force = Vector3.zero;
-        int count = Physics.OverlapSphereNonAlloc(transform.position, data.avoidanceRadius, avoidanceResults, data.enemyLayer);
+        int count = Physics.OverlapSphereNonAlloc(transform.position, enemyData.avoidanceRadius, avoidanceResults, enemyData.enemyLayer);
 
         for (int i = 0; i < count; i++)
         {
@@ -132,8 +140,8 @@ public class Enemy : Health
             float dist = away.magnitude;
             if (dist < 0.01f) continue;
 
-            float strength = Mathf.Clamp01((data.avoidanceRadius - dist) / data.avoidanceRadius);
-            force += away.normalized * strength * data.avoidanceStrength;
+            float strength = Mathf.Clamp01((enemyData.avoidanceRadius - dist) / enemyData.avoidanceRadius);
+            force += away.normalized * strength * enemyData.avoidanceStrength;
         }
 
         force.y = 0f; // ensure no vertical force for ground enemies
@@ -143,14 +151,14 @@ public class Enemy : Health
 
     private void ChooseNextState(float distance)
     {
-        if (!data.keepDistance)
+        if (!enemyData.keepDistance)
         {
             currentState = DodgeState.DodgeLeft;
             stateTimer = dodgeDuration;
             return;
         }
 
-        if (distance < data.followDistance - data.distanceTolerance || distance > data.followDistance + data.distanceTolerance)
+        if (distance < enemyData.followDistance - enemyData.distanceTolerance || distance > enemyData.followDistance + enemyData.distanceTolerance)
         {
             currentState = DodgeState.AdjustDistance;
             stateTimer = 0.3f;
@@ -178,9 +186,9 @@ public class Enemy : Health
 
     private Vector3 AdjustDistance(Vector3 direction, float distance)
     {
-        if (distance < data.followDistance - data.distanceTolerance)
+        if (distance < enemyData.followDistance - enemyData.distanceTolerance)
             return -direction;
-        else if (distance > data.followDistance + data.distanceTolerance)
+        else if (distance > enemyData.followDistance + enemyData.distanceTolerance)
             return direction;
         else
             return Vector3.zero;
@@ -192,4 +200,43 @@ public class Enemy : Health
         rb.AddForce(force, ForceMode.Impulse);
         knockbackTimer = duration;
     }
+
+    private bool CanSeePlayer()
+    {
+        if (playerObject == null || enemyData == null) return false;
+
+        Vector3 toPlayer = playerObject.transform.position - transform.position;
+        float distanceToPlayer = toPlayer.magnitude;
+
+        // Use visionDistance from EnemyData
+        if (distanceToPlayer > enemyData.visionDistance)
+            return false;
+
+        // Use visionAngle from EnemyData
+        Vector3 forward = transform.forward;
+        float angleToPlayer = Vector3.Angle(forward, toPlayer);
+        if (angleToPlayer > enemyData.visionAngle / 2f)
+            return false;
+
+        // Raycast for line of sight
+        RaycastHit hit;
+        Vector3 origin = transform.position + Vector3.up * 1.5f; // Adjust eye height as needed
+        Vector3 direction = toPlayer.normalized;
+
+        if (Physics.Raycast(origin, direction, out hit, enemyData.visionDistance))
+        {
+            if (hit.collider.gameObject != playerObject)
+            {
+                // Something blocking view (wall, obstacle, etc.)
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+
+        return true;
+    }
+
 }

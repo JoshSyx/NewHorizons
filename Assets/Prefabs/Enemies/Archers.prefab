@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 8779970637488928843}
   - component: {fileID: 4778411783762858435}
-  - component: {fileID: 8485243411838976090}
   - component: {fileID: -7762350951509744352}
+  - component: {fileID: 8485243411838976090}
   - component: {fileID: 6882701099376333488}
   m_Layer: 10
   m_Name: Archers
@@ -52,7 +52,20 @@ MonoBehaviour:
   idle: {fileID: 2100000, guid: bbc83f9e2b6f95e428a02a349fbefc20, type: 2}
   getHit: {fileID: 2100000, guid: 951b8304f139d6c41ab5077db2bf7837, type: 2}
   die: {fileID: 2100000, guid: 800c642ad61312c4897b95220d328195, type: 2}
-  data: {fileID: 11400000, guid: 45444b4713623d14797334c0cf527ed2, type: 2}
+  defaultKnockbackForce: 5
+  enemyData: {fileID: 11400000, guid: 45444b4713623d14797334c0cf527ed2, type: 2}
+--- !u!114 &-7762350951509744352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3553088143777831068}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0672f6691fcb97438c32205426bf052, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!95 &8485243411838976090
 Animator:
   serializedVersion: 7
@@ -75,20 +88,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &-7762350951509744352
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3553088143777831068}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a0672f6691fcb97438c32205426bf052, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enemy: {fileID: 4778411783762858435}
-  enemyData: {fileID: 0}
 --- !u!54 &6882701099376333488
 Rigidbody:
   m_ObjectHideFlags: 0

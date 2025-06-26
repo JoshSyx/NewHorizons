@@ -1,13 +1,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class StartingWeaponEntry
+{
+    public WeaponSlot slot;
+    public WeaponItem weapon;
+}
+
 public class PlayerInventory : MonoBehaviour
 {
     public static PlayerInventory Instance { get; private set; }
+
     private readonly Dictionary<WeaponSlot, WeaponItem> equippedWeapons = new();
 
     [Header("Pickup Prefab")]
     [SerializeField] private GameObject weaponPickupPrefab;  // assign your pickup prefab here in inspector
+
+    [Header("Starting Weapons")]
+    [SerializeField] private List<StartingWeaponEntry> startingWeapons;
 
     private void Awake()
     {
@@ -17,21 +28,47 @@ public class PlayerInventory : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
+
+        EquipStartingWeapons();
+    }
+
+    private void EquipStartingWeapons()
+    {
+        foreach (var entry in startingWeapons)
+        {
+            if (entry.weapon != null)
+            {
+                EquipWeaponToSlot(entry.weapon, entry.slot);
+            }
+            else
+            {
+                Debug.LogWarning($"Starting weapon for slot {entry.slot} is null.");
+            }
+        }
     }
 
     public void EquipWeaponToSlot(WeaponItem newWeapon, WeaponSlot slot)
     {
         if (newWeapon == null) return;
 
-        // Drop old weapon if any
-        if (equippedWeapons.TryGetValue(slot, out WeaponItem oldWeapon) && oldWeapon != null)
+        if (equippedWeapons.TryGetValue(slot, out WeaponItem currentWeapon) && currentWeapon == newWeapon)
         {
-            DropWeapon(oldWeapon);
+            Debug.Log($"Weapon {newWeapon.itemName} is already equipped in slot {slot}.");
+            return;
         }
 
-        equippedWeapons[slot] = newWeapon;
-        Debug.Log($"Equipped {newWeapon.itemName} to {slot} slot.");
+        if (currentWeapon != null)
+        {
+            DropWeapon(currentWeapon);
+        }
+
+        // Instantiate a unique copy
+        WeaponItem weaponInstance = Instantiate(newWeapon);
+
+        equippedWeapons[slot] = weaponInstance;
+        Debug.Log($"Equipped {weaponInstance.itemName} to {slot} slot.");
     }
 
     private void DropWeapon(WeaponItem weaponToDrop)
@@ -63,7 +100,6 @@ public class PlayerInventory : MonoBehaviour
             Debug.LogWarning("Dropped weapon prefab missing ItemPickup component.");
         }
     }
-
 
     public WeaponItem GetEquippedWeapon(WeaponSlot slot)
     {

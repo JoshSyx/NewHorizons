@@ -1,154 +1,86 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyCombat : MonoBehaviour
+public class EnemyCombat : Combat
 {
-    private Enemy enemy;
-    private EnemyData enemyData;
     private GameObject player;
+    private EnemyData enemyData;
 
-    private float attackCooldownTimer = 0f;
+    private float meleeTimer = 0f;
+    private float rangedTimer = 0f;
 
-    // Flying behavior states
-    private enum State { Approaching, Attacking, Retreating }
-    private State currentState = State.Approaching;
+    private bool meleeAttackPending = false;
+    private bool rangedAttackPending = false;
 
-    // Retreat parameters
-    [SerializeField] private float retreatDuration = 2f;
-    private float retreatTimer = 0f;
-
-    // Retreat distance multiplier (how far to fly away)
-    [SerializeField] private float retreatDistance = 5f;
-
-    // Movement speed (fallback if EnemyData speed not used)
-    [SerializeField] private float moveSpeed = 5f;
-
-    private Vector3 retreatDirection;
-
+    private void Awake()
+    {
+        Enemy enemy = GetComponent<Enemy>();
+        if (enemy != null) enemyData = enemy.enemyData;
+    }
     private void Start()
     {
-        enemy = GetComponent<Enemy>();
-        if (enemy == null)
+        if (player == null && GameManager.Instance != null)
         {
-            Debug.LogError("Enemy component missing on " + gameObject.name);
-            enabled = false;
-            return;
+            player = GameManager.Instance._player;
         }
-
-        enemyData = enemy.data;
-        if (enemyData == null)
-        {
-            Debug.LogError("EnemyData is missing on Enemy component for " + gameObject.name);
-            enabled = false;
-            return;
-        }
-
-        player = GameManager.Instance?._player;
-
-        if (enemyData != null && enemyData.speed > 0f)
-            moveSpeed = enemyData.speed;
-
-        Debug.Log($"{gameObject.name} moveSpeed: {moveSpeed}, isFlying: {enemyData.isFlying}");
     }
 
     private void Update()
     {
-        if (player == null || enemyData.equippedWeapon == null)
+        meleeTimer -= Time.deltaTime;
+        rangedTimer -= Time.deltaTime;
+
+        if (!CanSeePlayer())
+        {
+            // Reset pending flags so it won't try to attack when player not visible
+            meleeAttackPending = false;
+            rangedAttackPending = false;
             return;
-
-        if (attackCooldownTimer > 0f)
-            attackCooldownTimer -= Time.deltaTime;
-
-        if (!enemyData.isFlying)
-        {
-            TryAttackAtCurrentDistance();
-            return;
         }
 
-        switch (currentState)
+        // Melee attack logic
+        if (meleeTimer <= 0f && !meleeAttackPending && enemyData != null && enemyData.equippedWeapon != null && enemyData.equippedWeapon.IsMelee)
         {
-            case State.Approaching:
-                HandleApproach();
-                break;
-            case State.Attacking:
-                currentState = State.Retreating;
-                retreatTimer = retreatDuration;
-                retreatDirection = (transform.position - player.transform.position).normalized;
-                break;
-            case State.Retreating:
-                HandleRetreat();
-                break;
+            meleeAttackPending = true;
+            float delay = Random.Range(0f, 1f);
+            StartCoroutine(DelayedMeleeAttack(delay));
+        }
+
+        // Ranged attack logic
+        if (rangedTimer <= 0f && !rangedAttackPending && enemyData != null && enemyData.equippedWeapon != null && enemyData.equippedWeapon.IsRanged && player != null)
+        {
+            rangedAttackPending = true;
+            float delay = Random.Range(0f, 1f);
+            StartCoroutine(DelayedRangedAttack(delay));
         }
     }
 
-    private void TryAttackAtCurrentDistance()
-    {
-        Vector3 toPlayer = player.transform.position - transform.position;
-        float distance = toPlayer.magnitude;
 
-        if (CanAttack(distance) && attackCooldownTimer <= 0f)
+    private IEnumerator DelayedMeleeAttack(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (enemyData != null && enemyData.equippedWeapon != null && enemyData.equippedWeapon.IsMelee)
         {
-            Attack();
-            attackCooldownTimer = enemyData.attackCooldown;
+            PerformMeleeAttack(enemyData.equippedWeapon);
+            meleeTimer = enemyData.attackCooldown;
         }
+
+        meleeAttackPending = false;
     }
 
-    private void HandleApproach()
+    private IEnumerator DelayedRangedAttack(float delay)
     {
-        Vector3 toPlayer = player.transform.position - transform.position;
-        float distance = toPlayer.magnitude;
+        yield return new WaitForSeconds(delay);
 
-        MoveTowards(player.transform.position);
-
-        if (CanAttack(distance) && attackCooldownTimer <= 0f)
+        if (enemyData != null && enemyData.equippedWeapon != null && enemyData.equippedWeapon.IsRanged && player != null)
         {
-            Attack();
-            attackCooldownTimer = enemyData.attackCooldown;
-            currentState = State.Attacking;
+            PerformRangedAttack(enemyData.equippedWeapon);
+            rangedTimer = enemyData.attackCooldown;
         }
-    }
 
-    private void MoveTowards(Vector3 targetPosition)
-    {
-        Vector3 direction = (targetPosition - transform.position);
-        float distance = direction.magnitude;
-
-        if (distance < 0.01f)
-            return;
-
-        direction.Normalize();
-        transform.position += direction * moveSpeed * Time.deltaTime;
-
-        if (direction != Vector3.zero)
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 10f * Time.deltaTime);
-    }
-
-    private void HandleRetreat()
-    {
-        if (retreatTimer > 0f)
-        {
-            retreatTimer -= Time.deltaTime;
-            Vector3 retreatTarget = transform.position + retreatDirection * retreatDistance;
-            MoveTowards(retreatTarget);
-        }
-        else
-        {
-            currentState = State.Approaching;
-        }
-    }
-
-    private bool CanAttack(float distance)
-    {
-        WeaponItem weapon = enemyData.equippedWeapon;
-        return weapon.IsMelee ? distance <= weapon.MeleeRange : distance <= weapon.RangedDistance;
-    }
-
-    private void Attack()
-    {
-        WeaponItem weapon = enemyData.equippedWeapon;
-        if (weapon.IsMelee)
-            PerformMeleeAttack(weapon);
-        else
-            PerformRangedAttack(weapon);
+        rangedAttackPending = false;
     }
 
     private void PerformMeleeAttack(WeaponItem weapon)
@@ -158,26 +90,17 @@ public class EnemyCombat : MonoBehaviour
         float meleeRange = weapon.MeleeRange;
         float meleeAngle = weapon.MeleeAngle;
 
-        Collider[] hits = Physics.OverlapSphere(origin, meleeRange);
+        List<GameObject> hitPlayers = GetMeleeHits(origin, forward, meleeRange, meleeAngle, ~0, "Player");
+
         bool hitAny = false;
-
-        foreach (var hit in hits)
+        foreach (var playerObj in hitPlayers)
         {
-            GameObject rootObj = hit.transform.root.gameObject;
-            if (rootObj.CompareTag("Player"))
-            {
-                Vector3 directionToTarget = (rootObj.transform.position - origin).normalized;
-                float angleToTarget = Vector3.Angle(forward, directionToTarget);
+            DamageData data = weapon.GetDamageData(gameObject);
+            Vector3 knockbackDir = (playerObj.transform.position - transform.position).normalized;
+            float knockbackForce = 5f;
 
-                if (angleToTarget <= meleeAngle / 2f)
-                {
-                    DamageData data = weapon.GetDamageData(gameObject);
-                    Vector3 knockbackDir = (rootObj.transform.position - transform.position).normalized;
-                    float knockbackForce = 5f;
-                    rootObj.GetComponent<Health>()?.InflictDamage(data, knockbackDir, knockbackForce);
-                    hitAny = true;
-                }
-            }
+            ApplyDamage(playerObj, data, knockbackDir, knockbackForce);
+            hitAny = true;
         }
 
         if (hitAny)
@@ -188,23 +111,51 @@ public class EnemyCombat : MonoBehaviour
 
     private void PerformRangedAttack(WeaponItem weapon)
     {
-        Vector3 rayOrigin = transform.position + Vector3.up * 1.5f;
-        Vector3 directionToPlayer = (player.transform.position - rayOrigin).normalized;
-        float maxDistance = weapon.RangedDistance;
+        if (player == null) return;
 
-        if (Physics.Raycast(rayOrigin, directionToPlayer, out RaycastHit hit, maxDistance))
+        float spawnHeight = 1.5f;
+        Vector3 spawnPosition = transform.position + Vector3.up * spawnHeight;
+        Vector3 aimTarget = new Vector3(player.transform.position.x, spawnHeight, player.transform.position.z);
+
+        base.PerformRangedAttack(weapon, spawnPosition, aimTarget);
+    }
+
+    private bool CanSeePlayer()
+    {
+        if (player == null || enemyData == null) return false;
+
+        Vector3 toPlayer = player.transform.position - transform.position;
+        float distanceToPlayer = toPlayer.magnitude;
+
+        // Use visionDistance from EnemyData
+        if (distanceToPlayer > enemyData.visionDistance)
+            return false;
+
+        // Use visionAngle from EnemyData
+        Vector3 forward = transform.forward;
+        float angleToPlayer = Vector3.Angle(forward, toPlayer);
+        if (angleToPlayer > enemyData.visionAngle / 2f)
+            return false;
+
+        // Line of Sight check
+        RaycastHit hit;
+        Vector3 origin = transform.position + Vector3.up * 1.5f;  // eye height for raycast
+        Vector3 direction = toPlayer.normalized;
+
+        if (Physics.Raycast(origin, direction, out hit, enemyData.visionDistance))
         {
-            if (hit.collider.gameObject == player)
+            if (hit.collider.gameObject != player)
             {
-                DamageData data = weapon.GetDamageData(gameObject);
-                Vector3 knockbackDir = (player.transform.position - transform.position).normalized;
-                float knockbackForce = 3f;
-                player.GetComponent<Health>()?.InflictDamage(data, knockbackDir, knockbackForce);
-                Debug.Log($"{gameObject.name} hit player with ranged weapon {weapon.itemName} | Damage: {data.FinalAmount}");
-                return;
+                // Hit something else blocking view
+                return false;
             }
         }
+        else
+        {
+            // Nothing hit (shouldn't happen if player is within maxViewDistance)
+            return false;
+        }
 
-        Debug.Log($"{gameObject.name} missed ranged attack (no line of sight).");
+        return true;
     }
 }

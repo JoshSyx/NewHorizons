@@ -10,23 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 569ccfe848f96b74ca3320c4a8cabe91, type: 3}
-  m_Name: Bow
+  m_Name: ExplodeAttack
   m_EditorClassIdentifier: 
-  itemName: Bow_Default
-  icon: {fileID: 21300000, guid: 9c84d42666a102248b03855d9c9655ab, type: 3}
+  itemName: ExplodeAttack
+  icon: {fileID: 21300000, guid: 7168e9c71187a51438ed9269fb8cc9cf, type: 3}
   itemType: 0
   worldModelPrefab: {fileID: 0}
-  slot: 1
-  baseDamage: 50
-  damageType: 1
+  slot: 2
+  baseDamage: 30
+  damageType: 3
   IsDashAbility: 0
   MeleeRange: 2
   MeleeAngle: 90
   RangedDistance: 20
-  projectilePrefab: {fileID: 329524422957159383, guid: f6a37403b8e8d9d4d8388c16b16b204d, type: 3}
+  projectilePrefab: {fileID: 0}
   projectileSpeed: 10
-  useGravity: 1
-  stickDuration: 5
-  maxLifetime: 20
-  knockbackForce: 3
-  cooldownDuration: 0.5
+  cooldownDuration: 1

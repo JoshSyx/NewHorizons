@@ -20,6 +20,21 @@ public class WeaponItem : Item
     [Header("Ranged Settings")]
     [Tooltip("Ranged attack range in units")]
     public float RangedDistance = 20f;
+    public GameObject projectilePrefab;
+    public float projectileSpeed = 10f;
+
+    [Header("Projectile Behavior")]
+    [Tooltip("Whether gravity affects the projectile")]
+    public bool useGravity = true;
+
+    [Tooltip("How long before the projectile despawns after sticking")]
+    public float stickDuration = 5f;
+
+    [Tooltip("Total time before projectile despawns regardless of collision")]
+    public float maxLifetime = 20f;
+
+    [Tooltip("Force applied on impact")]
+    public float knockbackForce = 3f;
 
     [Header("Cooldown Settings")]
     [Tooltip("Cooldown duration in seconds before the weapon can be used again")]

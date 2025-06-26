@@ -9,6 +9,11 @@ public class EnemyData : ScriptableObject
     public float distanceTolerance = 0.5f;
     public bool keepDistance = true;
 
+    [Header("Vision Settings")]
+    public float visionDistance = 15f;     // Max distance enemy can see the player
+    [Range(0, 180)]
+    public float visionAngle = 90f;        // Field of View in degrees (e.g., 90 = 45 degrees each side)
+
     [Header("Movement Smoothing")]
     public float directionSmoothness = 0.1f;
 

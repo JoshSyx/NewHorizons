@@ -7,21 +7,23 @@ public class PlayerCombat : Combat
     [SerializeField] private PlayerInventory inventory;
 
     [Header("Melee Sweep Visual")]
-    [SerializeField] private LineRenderer meleeSweepRenderer;
+    [SerializeField] private GameObject sliceMeshPrefab;
     [SerializeField] private float meleeVisualDuration = 0.5f;
 
-    private Coroutine meleeVisualCoroutine;
+    [Header("Aim Assist Settings")]
+    [SerializeField] private float aimAssistMaxDistance = 10f;
+    [SerializeField] private float aimAssistAngle = 15f;
 
-    // Track the last used weapon item
+    [Header("Melee Settings")]
+    [SerializeField] private LayerMask enemyLayerMask; // Assign Enemy layer in Inspector
+
     private WeaponItem lastUsedWeapon;
     public WeaponItem LastUsedWeapon => lastUsedWeapon;
 
-    // Track cooldown timers per weapon instance
     private Dictionary<WeaponItem, float> weaponCooldownTimers = new Dictionary<WeaponItem, float>();
 
     private void Update()
     {
-        // Update cooldown timers per weapon
         List<WeaponItem> keys = new List<WeaponItem>(weaponCooldownTimers.Keys);
         foreach (var weapon in keys)
         {
@@ -46,7 +48,6 @@ public class PlayerCombat : Combat
             return;
         }
 
-        // Check if weapon is on cooldown
         if (IsWeaponOnCooldown(weapon))
         {
             Debug.Log($"Weapon {weapon.itemName} is on cooldown.");
@@ -61,16 +62,14 @@ public class PlayerCombat : Combat
         }
         else
         {
-            GameObject enemy = DetectEnemyWithAimAssist(weapon.RangedDistance, 15f);
+            GameObject enemy = DetectEnemyWithAimAssist(aimAssistMaxDistance, aimAssistAngle);
             if (enemy != null)
             {
                 DamageData data = weapon.GetDamageData(gameObject);
                 Vector3 knockbackDir = (enemy.transform.position - transform.position).normalized;
                 float knockbackForce = 3f;
 
-                Health targetHealth = enemy.GetComponent<Health>();
-                if (targetHealth != null)
-                    targetHealth.InflictDamage(data, knockbackDir, knockbackForce);
+                ApplyDamage(enemy, data, knockbackDir, knockbackForce);
 
                 Debug.Log($"Used {slot} weapon: {weapon.itemName} | Damage: {data.FinalAmount}");
             }
@@ -95,81 +94,51 @@ public class PlayerCombat : Combat
 
     private void PerformMeleeAttack(WeaponItem meleeWeapon)
     {
+        Vector3 origin = transform.position + Vector3.up * 1.0f;
+        Vector3 forward = transform.forward;
         float meleeRange = meleeWeapon.MeleeRange;
         float meleeAngle = meleeWeapon.MeleeAngle;
 
-        ShowMeleeSweepVisual(meleeRange, meleeAngle);
+        List<GameObject> hitEnemies = GetMeleeHits(origin, forward, meleeRange, meleeAngle, enemyLayerMask, "Enemy");
 
-        Vector3 origin = transform.position + Vector3.up * 1.0f;
-        Vector3 forward = transform.forward;
-
-        Collider[] hits = Physics.OverlapSphere(origin, meleeRange);
         int hitCount = 0;
-
-        foreach (var hit in hits)
+        foreach (var enemyObj in hitEnemies)
         {
-            GameObject rootObj = hit.transform.root.gameObject;
-            if (!rootObj.CompareTag("Enemy"))
-                continue;
+            DamageData data = meleeWeapon.GetDamageData(gameObject);
+            Vector3 knockbackDir = (enemyObj.transform.position - transform.position).normalized;
+            float knockbackForce = 5f;
 
-            Vector3 directionToTarget = (rootObj.transform.position - origin).normalized;
-            float angleToTarget = Vector3.Angle(forward, directionToTarget);
-
-            if (angleToTarget <= meleeAngle / 2f)
-            {
-                DamageData data = meleeWeapon.GetDamageData(gameObject);
-                Vector3 knockbackDir = (rootObj.transform.position - transform.position).normalized;
-                float knockbackForce = 5f;
-
-                Health targetHealth = rootObj.GetComponent<Health>();
-                if (targetHealth != null)
-                    targetHealth.InflictDamage(data, knockbackDir, knockbackForce);
-
-                hitCount++;
-            }
+            ApplyDamage(enemyObj, data, knockbackDir, knockbackForce);
+            hitCount++;
         }
 
-        if (hitCount > 0)
-            Debug.Log($"Melee attack hit {hitCount} enemies with {meleeWeapon.itemName}");
-        else
-            Debug.Log("Melee attack hit no enemies.");
+        Debug.Log(hitCount > 0
+            ? $"Melee attack hit {hitCount} enemies with {meleeWeapon.itemName}"
+            : "Melee attack hit no enemies.");
+
+        ShowMeleeSweepVisual(meleeRange, meleeAngle);
     }
 
     private void ShowMeleeSweepVisual(float range, float angle)
     {
-        if (meleeSweepRenderer == null)
-            return;
-
-        if (meleeVisualCoroutine != null)
-            StopCoroutine(meleeVisualCoroutine);
-
-        meleeVisualCoroutine = StartCoroutine(DrawMeleeSweepArc(range, angle));
-    }
-
-    private IEnumerator DrawMeleeSweepArc(float radius, float arcAngle)
-    {
-        int segments = 30;
-        float halfAngle = arcAngle / 2f;
-
-        Vector3 origin = transform.position + Vector3.up * 1.0f;
-        Vector3 forward = transform.forward;
-
-        meleeSweepRenderer.positionCount = segments + 2;
-        meleeSweepRenderer.SetPosition(0, origin);
-
-        for (int i = 0; i <= segments; i++)
+        if (sliceMeshPrefab == null)
         {
-            float currentAngle = Mathf.Lerp(-halfAngle, halfAngle, (float)i / segments);
-            Quaternion rotation = Quaternion.AngleAxis(currentAngle, Vector3.up);
-            Vector3 point = origin + rotation * forward * radius;
-            meleeSweepRenderer.SetPosition(i + 1, point);
+            Debug.LogWarning("SliceMesh prefab not assigned!");
+            return;
         }
 
-        meleeSweepRenderer.enabled = true;
+        Vector3 position = transform.position + Vector3.up * 1.0f;
+        Quaternion rotation = Quaternion.LookRotation(transform.forward, Vector3.up);
 
-        yield return new WaitForSeconds(meleeVisualDuration);
+        GameObject slice = Instantiate(sliceMeshPrefab, position, rotation);
 
-        meleeSweepRenderer.enabled = false;
+        SliceMesh sliceMesh = slice.GetComponent<SliceMesh>();
+        if (sliceMesh != null)
+        {
+            sliceMesh.radius = range;
+            sliceMesh.angle = angle;
+            sliceMesh.duration = meleeVisualDuration;
+        }
     }
 
     private GameObject DetectEnemyWithAimAssist(float maxDistance = 10f, float aimAssistAngle = 15f)
@@ -178,7 +147,6 @@ public class PlayerCombat : Combat
         Vector3 forward = transform.forward;
 
         Collider[] hitColliders = Physics.OverlapSphere(rayOrigin, maxDistance);
-
         GameObject bestTarget = null;
         float closestAngle = aimAssistAngle;
 
@@ -209,6 +177,46 @@ public class PlayerCombat : Combat
 
     public GameObject GetAimAssistTarget()
     {
-        return DetectEnemyWithAimAssist(10f, 15f);
+        return DetectEnemyWithAimAssist(aimAssistMaxDistance, aimAssistAngle);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (lastUsedWeapon == null || !lastUsedWeapon.IsMelee)
+            return;
+
+        Gizmos.color = Color.red;
+        Vector3 origin = transform.position + Vector3.up * 1.0f;
+        float range = lastUsedWeapon.MeleeRange;
+        float angle = lastUsedWeapon.MeleeAngle;
+
+        Gizmos.DrawWireSphere(origin, range);
+
+        Vector3 forward = transform.forward;
+        Vector3 leftDir = Quaternion.Euler(0, -angle / 2f, 0) * forward * range;
+        Vector3 rightDir = Quaternion.Euler(0, angle / 2f, 0) * forward * range;
+
+        Gizmos.DrawLine(origin, origin + leftDir);
+        Gizmos.DrawLine(origin, origin + rightDir);
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (lastUsedWeapon == null || !lastUsedWeapon.IsMelee)
+            return;
+
+        Gizmos.color = Color.green;
+
+        Vector3 origin = transform.position + Vector3.up * 1.0f;
+        float range = lastUsedWeapon.MeleeRange;
+        float angle = lastUsedWeapon.MeleeAngle;
+
+        Vector3 forward = transform.forward;
+
+        Vector3 leftEdgeDir = Quaternion.Euler(0, -angle / 2f, 0) * forward;
+        Vector3 rightEdgeDir = Quaternion.Euler(0, angle / 2f, 0) * forward;
+
+        Gizmos.DrawRay(origin, leftEdgeDir * range);
+        Gizmos.DrawRay(origin, rightEdgeDir * range);
     }
 }

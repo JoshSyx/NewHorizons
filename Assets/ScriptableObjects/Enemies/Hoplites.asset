@@ -25,5 +25,5 @@ MonoBehaviour:
   isFlying: 0
   flyingHeight: 3
   verticalSmoothness: 0.2
-  equippedWeapon: {fileID: 11400000, guid: 020606f033d8a4649bc3b8d19506344b, type: 2}
+  equippedWeapon: {fileID: 11400000, guid: 91eb45b04a395ba4db6a08e237154f9f, type: 2}
   attackCooldown: 1.5

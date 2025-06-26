@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41d6daf1248c4d9439ddc9ab6d6cfbf4, type: 3}
   m_Name: Archer
   m_EditorClassIdentifier: 
-  speed: 8
-  followDistance: 10
+  speed: 4.88
+  followDistance: 7.12
   distanceTolerance: 0.5
   keepDistance: 1
   directionSmoothness: 0.1
@@ -25,5 +25,5 @@ MonoBehaviour:
   isFlying: 0
   flyingHeight: 5
   verticalSmoothness: 0.2
-  equippedWeapon: {fileID: 11400000, guid: 883da53162a04f642afc69876c442da7, type: 2}
+  equippedWeapon: {fileID: 11400000, guid: 09cd40305b59e6346837c4d3775af250, type: 2}
   attackCooldown: 1.5

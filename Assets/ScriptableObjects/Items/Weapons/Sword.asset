@@ -23,4 +23,6 @@ MonoBehaviour:
   MeleeRange: 2
   MeleeAngle: 90
   RangedDistance: 20
-  cooldownDuration: 1
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 10
+  cooldownDuration: 0.1

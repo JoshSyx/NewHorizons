@@ -1,7 +1,9 @@
 public enum WeaponSlot
 {
-    Melee,
-    Primary,
-    Special,
-    Dash // or rename if you want; just an example slot for dash ability
+    Action1,
+    Action2,
+    Action3,
+    Action4,
+    Action5,
+    Action6
 }

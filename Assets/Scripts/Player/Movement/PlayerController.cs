@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
@@ -7,46 +7,46 @@ public class PlayerController : MonoBehaviour
     [Header("Movement Settings")]
     public float speed = 8f;
     public float gravity = -9.81f;
-
-    [Header("Dash Settings")]
-    public float dashSpeed = 25f;
-    public float dashDuration = 0.2f;
-    public float dashCooldown = 1f;
+    public float rotationSmoothTime = 0.2f;
 
     private float verticalVelocity = 0f;
-
     private CharacterController controller;
     private Vector3 lastMoveDirection = Vector3.forward;
 
-    private bool isDashing = false;
-    private float dashCooldownTimer = 0f;
-
     private PlayerCombat playerCombat;
+    private PlayerDash playerDash;
+    public PlayerInput playerInput; // Reference to PlayerInput
 
+    private Vector3 lastMousePosition;
+    private float mouseMoveThreshold = 1.0f; // adjust as needed
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
         playerCombat = GetComponent<PlayerCombat>();
+        playerDash = GetComponent<PlayerDash>();
     }
 
     private void FixedUpdate()
     {
-        if (dashCooldownTimer > 0f)
-            dashCooldownTimer -= Time.deltaTime;
-
-        if (!isDashing)
+        if (playerDash == null || !playerDash.IsDashing)
+        {
             HandleMovement();
+        }
     }
 
     private void Update()
     {
         HandleActionInputs();
+        Debug.Log(Mouse.current.position.ReadValue());
+
     }
 
     private void HandleMovement()
     {
-        Vector2 input = UserInput.Instance.MoveInput;
-        Vector3 inputDir = new Vector3(input.x, 0f, input.y).normalized;
+        Vector2 moveInput = UserInput.Instance.MoveInput;
+        Vector2 aimInput = UserInput.Instance.AimInput;
+
+        Vector3 inputDir = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
 
         if (inputDir.sqrMagnitude > 0.01f)
         {
@@ -58,107 +58,98 @@ public class PlayerController : MonoBehaviour
 
         verticalVelocity += gravity * Time.deltaTime;
         if (controller.isGrounded && verticalVelocity < 0)
+        {
             verticalVelocity = -1f;
+        }
 
         controller.Move(move * Time.deltaTime);
 
-        if (lastMoveDirection.sqrMagnitude > 0.01f)
+        HandleRotation(aimInput);
+    }
+
+    private void HandleRotation(Vector2 aimInput)
+    {
+        string scheme = playerInput.currentControlScheme;
+
+        // --- Mouse aiming ---
+        Vector3 currentMousePos = Input.mousePosition;
+        if ((currentMousePos - lastMousePosition).sqrMagnitude > mouseMoveThreshold)
         {
-            bool lastUsedIsRanged = false;
+            playerInput.SwitchCurrentControlScheme("Keyboard&Mouse");
+        }
+        lastMousePosition = currentMousePos;
 
-            if (playerCombat != null)
+        if (playerInput.currentControlScheme == "Keyboard&Mouse")
+        {
+            Ray ray = Camera.main.ScreenPointToRay(currentMousePos);
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f, LayerMask.GetMask("Ground")))
             {
-                WeaponItem lastWeapon = playerCombat.LastUsedWeapon;
-                lastUsedIsRanged = lastWeapon != null && !lastWeapon.IsMelee;
-            }
+                Vector3 direction = hit.point - transform.position;
+                direction.y = 0f;
 
-            Quaternion targetRotation;
-
-            if (lastUsedIsRanged)
-            {
-                GameObject aimTarget = playerCombat.GetAimAssistTarget();
-
-                if (aimTarget != null)
+                if (direction.sqrMagnitude > 0.1f)
                 {
-                    Vector3 toEnemy = (aimTarget.transform.position - transform.position).normalized;
-
-                    Vector3 moveDirFlat = lastMoveDirection;
-                    moveDirFlat.y = 0f;
-                    moveDirFlat.Normalize();
-
-                    Vector3 enemyDirFlat = toEnemy;
-                    enemyDirFlat.y = 0f;
-                    enemyDirFlat.Normalize();
-
-                    float angleBetween = Vector3.SignedAngle(moveDirFlat, enemyDirFlat, Vector3.up);
-                    float maxOffset = 50f; // max partial rotation angle
-
-                    float clampedAngle = Mathf.Clamp(angleBetween, -maxOffset, maxOffset);
-
-                    // Rotate move direction partially toward enemy direction
-                    Vector3 finalDir = Quaternion.Euler(0f, clampedAngle, 0f) * moveDirFlat;
-
-                    targetRotation = Quaternion.LookRotation(finalDir);
-                }
-                else
-                {
-                    targetRotation = Quaternion.LookRotation(lastMoveDirection);
+                    Quaternion targetRotation = Quaternion.LookRotation(direction);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSmoothTime);
                 }
             }
             else
             {
-                // If last used weapon wasn't ranged, rotate fully toward movement direction
-                targetRotation = Quaternion.LookRotation(lastMoveDirection);
+                Debug.LogWarning("[Rotation] Raycast from mouse did NOT hit ground.");
             }
 
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 0.2f);
+            return;
+        }
+
+        // --- Gamepad aiming ---
+        if (scheme == "Gamepad")
+        {
+            Vector3 aimDir = new Vector3(aimInput.x, 0f, aimInput.y);
+            if (aimDir.sqrMagnitude > 0.1f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(aimDir);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSmoothTime);
+            }
+            return;
+        }
+
+        // --- Default fallback to movement direction ---
+        if (lastMoveDirection.sqrMagnitude > 0.1f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(lastMoveDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSmoothTime);
         }
     }
-
-
 
     private void HandleActionInputs()
     {
         if (UserInput.Instance == null) return;
 
-        // Pickup priority
+        // Attempt pickup if player is in range and presses any action button
         if (ItemPickup.PlayerIsInPickupRange)
         {
-            if (UserInput.Instance.ActionOneJustPressed)
+            if (UserInput.Instance.ActionOneJustPressed ||
+                UserInput.Instance.ActionTwoJustPressed ||
+                UserInput.Instance.ActionThreeJustPressed ||
+                UserInput.Instance.ActionFourJustPressed ||
+                UserInput.Instance.ActionFiveJustPressed ||
+                UserInput.Instance.ActionSixJustPressed)
             {
-                ItemPickup.PickupWeaponAtRange(WeaponSlot.Melee);
-                return;
-            }
-            if (UserInput.Instance.ActionTwoJustPressed)
-            {
-                ItemPickup.PickupWeaponAtRange(WeaponSlot.Primary);
-                return;
-            }
-            if (UserInput.Instance.ActionThreeJustPressed)
-            {
-                ItemPickup.PickupWeaponAtRange(WeaponSlot.Special);
-                return;
-            }
-            if (UserInput.Instance.ActionFourJustPressed)
-            {
-                ItemPickup.PickupWeaponAtRange(WeaponSlot.Dash);
+                ItemPickup.PickupWeaponAtRange(); // Auto-pickup based on WeaponItem.slot
                 return;
             }
         }
 
-        if (isDashing) return;
+        // Skip action inputs while dashing
+        if (playerDash != null && playerDash.IsDashing) return;
 
-        if (UserInput.Instance.ActionOneJustPressed)
-            TryPerformAction(WeaponSlot.Melee);
-
-        if (UserInput.Instance.ActionTwoJustPressed)
-            TryPerformAction(WeaponSlot.Primary);
-
-        if (UserInput.Instance.ActionThreeJustPressed)
-            TryPerformAction(WeaponSlot.Special);
-
-        if (UserInput.Instance.ActionFourJustPressed)
-            TryPerformAction(WeaponSlot.Dash);
+        // Handle action inputs
+        if (UserInput.Instance.ActionOneJustPressed) TryPerformAction(WeaponSlot.Action1);
+        if (UserInput.Instance.ActionTwoJustPressed) TryPerformAction(WeaponSlot.Action2);
+        if (UserInput.Instance.ActionThreeJustPressed) TryPerformAction(WeaponSlot.Action3);
+        if (UserInput.Instance.ActionFourJustPressed) TryPerformAction(WeaponSlot.Action4);
+        if (UserInput.Instance.ActionFiveJustPressed) TryPerformAction(WeaponSlot.Action5);
+        if (UserInput.Instance.ActionSixJustPressed) TryPerformAction(WeaponSlot.Action6);
     }
 
     private void TryPerformAction(WeaponSlot slot)
@@ -172,33 +163,11 @@ public class PlayerController : MonoBehaviour
 
         if (weapon is WeaponItem weaponItem && weaponItem.IsDashAbility)
         {
-            if (dashCooldownTimer <= 0f && lastMoveDirection.sqrMagnitude > 0.01f)
-            {
-                StartCoroutine(DashRoutine(lastMoveDirection.normalized));
-            }
+            playerDash?.TryDash(lastMoveDirection.normalized);
         }
         else
         {
-            playerCombat.AttackWithSlot(slot);
+            playerCombat?.AttackWithSlot(slot);
         }
-    }
-
-    private IEnumerator DashRoutine(Vector3 dashDirection)
-    {
-        isDashing = true;
-        dashCooldownTimer = dashCooldown;
-
-        float timer = 0f;
-
-        while (timer < dashDuration)
-        {
-            Vector3 moveDelta = dashDirection * dashSpeed * Time.deltaTime;
-            controller.Move(moveDelta);
-
-            timer += Time.deltaTime;
-            yield return null;
-        }
-
-        isDashing = false;
     }
 }
