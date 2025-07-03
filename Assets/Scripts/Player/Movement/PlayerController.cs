@@ -36,8 +36,9 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        HandleDashInput();
         HandleActionInputs();
-        HandleContinuousShooting();
+        HandleShooting();
     }
 
     private void HandleMovement()
@@ -139,20 +140,60 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (playerDash != null && playerDash.IsDashing) return;
-
-        TryPerformAction(Slot.Action1, UserInput.Instance.ActionOneJustPressed);
-        TryPerformAction(Slot.Action2, UserInput.Instance.ActionTwoJustPressed);
-        TryPerformAction(Slot.Action3, UserInput.Instance.ActionThreeJustPressed);
-        TryPerformAction(Slot.Action4, UserInput.Instance.ActionFourJustPressed);
-        TryPerformAction(Slot.Action5, UserInput.Instance.ActionFiveJustPressed);
-        TryPerformAction(Slot.Action6, UserInput.Instance.ActionSixJustPressed);
+        // Only SELECT slot on button press
+        CheckAndHandleActionInput(Slot.Action1, UserInput.Instance.ActionOneJustPressed);
+        CheckAndHandleActionInput(Slot.Action2, UserInput.Instance.ActionTwoJustPressed);
+        CheckAndHandleActionInput(Slot.Action3, UserInput.Instance.ActionThreeJustPressed);
+        CheckAndHandleActionInput(Slot.Action4, UserInput.Instance.ActionFourJustPressed);
+        CheckAndHandleActionInput(Slot.Action5, UserInput.Instance.ActionFiveJustPressed);
     }
+    private void CheckAndHandleActionInput(Slot slot, bool justPressed)
+    {
+        if (!justPressed) return;
+
+        var item = PlayerInventory.Instance.GetEquippedItem(slot);
+        if (item == null)
+        {
+            SelectSlot(slot); // Show UI even if empty
+            return;
+        }
+
+        bool isContinuousFire = false;
+
+        if (item is AbilityItem ability)
+            isContinuousFire = ability.IsContinuousFire;
+        else if (item is WeaponItem weapon)
+            isContinuousFire = weapon.IsContinuousFire;
+
+        if (isContinuousFire)
+            SelectSlot(slot); // Continuous items only select the slot (held trigger will shoot)
+        else
+            TryPerformAction(slot, true); // Instant-fire weapons fire immediately
+    }
+
+    private void SelectSlot(Slot slot)
+    {
+        PlayerInventory.Instance.SetLastSelectedSlot(slot);
+
+        OverlayManager overlay = OverlayManager.Instance;
+        if (overlay != null)
+        {
+            overlay.ShowActiveSlot(slot);
+        }
+    }
+
 
     private void TryPerformAction(Slot slot, bool pressed)
     {
         if (!pressed) return;
         PlayerInventory.Instance.SetLastSelectedSlot(slot);
+
+        var overlay = OverlayManager.Instance;
+        if (overlay != null)
+        {
+            overlay.ShowActiveSlot(slot);
+        }
+
         var item = PlayerInventory.Instance.GetEquippedItem(slot);
         if (item == null)
         {
@@ -170,6 +211,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+
     private bool AnyActionJustPressed()
     {
         var input = UserInput.Instance;
@@ -178,21 +220,88 @@ public class PlayerController : MonoBehaviour
                input.ActionFiveJustPressed || input.ActionSixJustPressed;
     }
 
-    private void HandleContinuousShooting()
+    private void HandleShooting()
     {
-        if (UserInput.Instance.LeftTriggerBeingHeld)
-        {
-            Slot lastSlot = PlayerInventory.Instance.GetLastSelectedSlot();
-            var item = PlayerInventory.Instance.GetEquippedItem(lastSlot);
+        var overlay = OverlayManager.Instance;
 
-            if (item is WeaponItem weapon && weapon.IsRanged)
-            {
-                playerCombat.StartShootingWithWeapon(weapon);
-            }
-        }
-        else
+        Slot lastSlot = PlayerInventory.Instance.GetLastSelectedSlot();
+        var item = PlayerInventory.Instance.GetEquippedItem(lastSlot);
+        if (item == null)
         {
             playerCombat.StopShooting();
+            return;
+        }
+
+        if (overlay != null)
+        {
+            overlay.ShowActiveSlot(lastSlot);
+        }
+
+        // Check if item is AbilityItem or WeaponItem, and get IsContinuousFire flag
+        bool isContinuousFire = false;
+        bool isDashAbility = false;
+
+        if (item is AbilityItem ability)
+        {
+            isContinuousFire = ability.IsContinuousFire;
+            isDashAbility = ability.abilityType == AbilityType.Dash;
+        }
+        else if (item is WeaponItem weapon)
+        {
+            isContinuousFire = weapon.IsContinuousFire;
+        }
+
+        // Handle dash ability separately
+        if (isDashAbility)
+        {
+            if (UserInput.Instance.LeftTriggerJustPressed)
+            {
+                playerDash?.TryDash(lastMoveDirection.normalized);
+            }
+            playerCombat.StopShooting();
+            return;
+        }
+
+        // Handle shooting for weapons and other abilities
+        if (UserInput.Instance.LeftTriggerJustPressed || (isContinuousFire && UserInput.Instance.LeftTriggerBeingHeld))
+        {
+            if (item is WeaponItem weaponItem && weaponItem.IsRanged)
+            {
+                playerCombat.StartShootingWithWeapon(weaponItem);
+
+                // If not continuous fire, stop immediately after shooting once
+                if (!isContinuousFire)
+                {
+                    playerCombat.StopShooting();
+                }
+            }
+            else
+            {
+                playerCombat.AttackWithSlot(lastSlot);
+
+                // Stop shooting if not continuous fire
+                if (!isContinuousFire)
+                {
+                    playerCombat.StopShooting();
+                }
+            }
+        }
+        else if (isContinuousFire && !UserInput.Instance.LeftTriggerBeingHeld)
+        {
+            playerCombat.StopShooting();
+        }
+        else if (!isContinuousFire)
+        {
+            playerCombat.StopShooting();
+        }
+    }
+
+    private void HandleDashInput()
+    {
+        if (UserInput.Instance.DashTriggered)
+        {
+            Vector3 dashWorldDir = UserInput.Instance.GetWorldDashDirection();
+            playerDash?.TryDash(dashWorldDir);
         }
     }
 }

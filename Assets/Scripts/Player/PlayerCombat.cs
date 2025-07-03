@@ -16,6 +16,8 @@ public class PlayerCombat : Combat
     [Header("Melee Settings")]
     [SerializeField] private LayerMask enemyLayerMask;
 
+    private Health health;
+
     private WeaponItem lastUsedWeapon;
     public WeaponItem LastUsedWeapon => lastUsedWeapon;
 
@@ -25,6 +27,11 @@ public class PlayerCombat : Combat
     private float shootingCooldownTimer = 0f;
     private bool isShooting = false;
 
+
+    private void Awake()
+    {
+        health = GetComponent<Health>();
+    }
     private void Update()
     {
         var keys = new List<WeaponItem>(weaponCooldownTimers.Keys);
@@ -75,8 +82,12 @@ public class PlayerCombat : Combat
                 PerformMeleeAttack(weapon, weapon.knockbackForce);
             else if (weapon.IsRanged)
                 PerformRangedAttackWithWeapon(weapon);
+            else if (weapon.IsExploding)
+            {
+                PerformExplosionAttack(transform.position, weapon.explosionRadius, weapon.explosionDamage, weapon.damageType, gameObject);
+            }
 
-            StartWeaponCooldown(weapon);
+                StartWeaponCooldown(weapon);
         }
         else if (equippedItem is AbilityItem ability)
         {
@@ -89,12 +100,22 @@ public class PlayerCombat : Combat
                     PerformRangedAttackWithAbility(ability);
                     break;
                 case AbilityType.Dash:
+                    // TODO: Implement dash behavior
                     break;
+                case AbilityType.Shield:
+                    if (health != null)
+                        health.ApplyShield(ability);
+                    else
+                    {
+                        Debug.LogWarning("No health component found to apply shield to");
+                    }
+                        break;
                 default:
                     Debug.Log($"Unhandled ability type: {ability.abilityType}");
                     break;
             }
         }
+
         else
         {
             Debug.LogWarning($"Equipped item in slot {slot} is not a WeaponItem or AbilityItem.");
@@ -105,7 +126,7 @@ public class PlayerCombat : Combat
     {
         Vector3 origin = transform.position + Vector3.up * 1.0f;
         Vector3 forward = transform.forward;
-        float meleeRange = meleeWeapon.MeleeRange;
+        float meleeRange = meleeWeapon.range;
         float meleeAngle = meleeWeapon.MeleeAngle;
 
         List<GameObject> hitEnemies = GetMeleeHits(origin, forward, meleeRange, meleeAngle, enemyLayerMask, "Enemy");

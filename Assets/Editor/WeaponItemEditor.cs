@@ -1,93 +1,139 @@
-using UnityEditor;
-using UnityEngine;
+//using UnityEditor;
+//using UnityEngine;
 
-[CustomEditor(typeof(WeaponItem))]
-public class WeaponItemEditor : Editor
-{
-    private SerializedProperty weaponSlotProp;
-    private SerializedProperty damageTypeProp;
+//[CustomEditor(typeof(WeaponItem))]
+//public class WeaponItemEditor : Editor
+//{
+//    // Base class (Item) properties
+//    private SerializedProperty itemNameProp;
+//    private SerializedProperty iconProp;
+//    private SerializedProperty worldModelPrefabProp;
 
-    // Melee props
-    private SerializedProperty meleeRangeProp;
-    private SerializedProperty meleeAngleProp;
+//    // WeaponItem properties
+//    private SerializedProperty weaponSlotProp;
+//    private SerializedProperty damageTypeProp;
+//    private SerializedProperty baseDamageProp;
 
-    // Ranged props
-    private SerializedProperty rangedDistanceProp;
-    private SerializedProperty projectilePrefabProp;
-    private SerializedProperty projectileSpeedProp;
+//    // Melee props
+//    private SerializedProperty meleeRangeProp;
+//    private SerializedProperty meleeAngleProp;
 
-    // Projectile behavior props
-    private SerializedProperty useGravityProp;
-    private SerializedProperty stickDurationProp;
-    private SerializedProperty maxLifetimeProp;
-    private SerializedProperty knockbackForceProp;
+//    // Ranged props
+//    private SerializedProperty rangedDistanceProp;
+//    private SerializedProperty projectilePrefabProp;
+//    private SerializedProperty projectileSpeedProp;
 
-    // Cooldown prop
-    private SerializedProperty cooldownDurationProp;
+//    // Exploding props
+//    private SerializedProperty explosionRadiusProp;
+//    private SerializedProperty explosionDamageProp;
+//    private SerializedProperty fuseTimeProp;
 
-    private void OnEnable()
-    {
-        weaponSlotProp = serializedObject.FindProperty("slot");
-        damageTypeProp = serializedObject.FindProperty("damageType");
+//    // Projectile behavior props
+//    private SerializedProperty useGravityProp;
+//    private SerializedProperty stickDurationProp;
+//    private SerializedProperty maxLifetimeProp;
+//    private SerializedProperty knockbackForceProp;
 
-        meleeRangeProp = serializedObject.FindProperty("MeleeRange");
-        meleeAngleProp = serializedObject.FindProperty("MeleeAngle");
+//    // Cooldown
+//    private SerializedProperty cooldownDurationProp;
 
-        rangedDistanceProp = serializedObject.FindProperty("RangedDistance");
-        projectilePrefabProp = serializedObject.FindProperty("projectilePrefab");
-        projectileSpeedProp = serializedObject.FindProperty("projectileSpeed");
+//    private void OnEnable()
+//    {
+//        // Base class properties
+//        itemNameProp = serializedObject.FindProperty("itemName");
+//        iconProp = serializedObject.FindProperty("icon");
+//        worldModelPrefabProp = serializedObject.FindProperty("worldModelPrefab");
 
-        useGravityProp = serializedObject.FindProperty("useGravity");
-        stickDurationProp = serializedObject.FindProperty("stickDuration");
-        maxLifetimeProp = serializedObject.FindProperty("maxLifetime");
-        knockbackForceProp = serializedObject.FindProperty("knockbackForce");
+//        // WeaponItem-specific properties
+//        weaponSlotProp = serializedObject.FindProperty("slot");
+//        damageTypeProp = serializedObject.FindProperty("damageType");
+//        baseDamageProp = serializedObject.FindProperty("baseDamage");
 
-        cooldownDurationProp = serializedObject.FindProperty("cooldownDuration");
-    }
+//        meleeRangeProp = serializedObject.FindProperty("range");
+//        meleeAngleProp = serializedObject.FindProperty("MeleeAngle");
 
-    public override void OnInspectorGUI()
-    {
-        serializedObject.Update();
+//        rangedDistanceProp = serializedObject.FindProperty("RangedDistance");
+//        projectilePrefabProp = serializedObject.FindProperty("projectilePrefab");
+//        projectileSpeedProp = serializedObject.FindProperty("projectileSpeed");
 
-        // Always show Slot first
-        EditorGUILayout.PropertyField(weaponSlotProp);
-        EditorGUILayout.PropertyField(damageTypeProp);
+//        // Exploding properties
+//        explosionRadiusProp = serializedObject.FindProperty("explosionRadius");
+//        explosionDamageProp = serializedObject.FindProperty("explosionDamage");
+//        fuseTimeProp = serializedObject.FindProperty("fuseTime");
 
-        DamageType damageType = (DamageType)damageTypeProp.enumValueIndex;
+//        useGravityProp = serializedObject.FindProperty("useGravity");
+//        stickDurationProp = serializedObject.FindProperty("stickDuration");
+//        maxLifetimeProp = serializedObject.FindProperty("maxLifetime");
+//        knockbackForceProp = serializedObject.FindProperty("knockbackForce");
 
-        EditorGUILayout.Space();
+//        cooldownDurationProp = serializedObject.FindProperty("cooldownDuration");
+//    }
 
-        switch (damageType)
-        {
-            case DamageType.Melee:
-                EditorGUILayout.LabelField("Melee Settings", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(meleeRangeProp);
-                EditorGUILayout.PropertyField(meleeAngleProp);
-                break;
+//    public override void OnInspectorGUI()
+//    {
+//        serializedObject.Update();
 
-            case DamageType.Ranged:
-                EditorGUILayout.LabelField("Ranged Settings", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(rangedDistanceProp);
-                EditorGUILayout.PropertyField(projectilePrefabProp);
-                EditorGUILayout.PropertyField(projectileSpeedProp);
+//        // Draw base Item fields
+//        EditorGUILayout.LabelField("Base Item Settings", EditorStyles.boldLabel);
+//        EditorGUILayout.PropertyField(itemNameProp);
+//        EditorGUILayout.PropertyField(iconProp);
+//        EditorGUILayout.PropertyField(worldModelPrefabProp);
 
-                EditorGUILayout.Space();
-                EditorGUILayout.LabelField("Projectile Behavior", EditorStyles.boldLabel);
-                EditorGUILayout.PropertyField(useGravityProp);
-                EditorGUILayout.PropertyField(stickDurationProp);
-                EditorGUILayout.PropertyField(maxLifetimeProp);
-                EditorGUILayout.PropertyField(knockbackForceProp);
-                break;
+//        EditorGUILayout.Space();
 
-            default:
-                EditorGUILayout.HelpBox("No specific settings for this damage type.", MessageType.Info);
-                break;
-        }
+//        // Weapon general settings
+//        EditorGUILayout.LabelField("Weapon Settings", EditorStyles.boldLabel);
+//        EditorGUILayout.PropertyField(weaponSlotProp);
+//        EditorGUILayout.PropertyField(damageTypeProp);
 
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Cooldown Settings", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(cooldownDurationProp);
+//        // Show baseDamage for all types since it’s relevant
+//        EditorGUILayout.PropertyField(baseDamageProp);
 
-        serializedObject.ApplyModifiedProperties();
-    }
-}
+//        EditorGUILayout.Space();
+
+//        DamageType damageType = (DamageType)damageTypeProp.enumValueIndex;
+
+//        // Conditional fields for each damage type
+//        switch (damageType)
+//        {
+//            case DamageType.Melee:
+//                EditorGUILayout.LabelField("Melee Settings", EditorStyles.boldLabel);
+//                EditorGUILayout.PropertyField(meleeRangeProp);
+//                EditorGUILayout.PropertyField(meleeAngleProp);
+//                break;
+
+//            case DamageType.Ranged:
+//                EditorGUILayout.LabelField("Ranged Settings", EditorStyles.boldLabel);
+//                EditorGUILayout.PropertyField(rangedDistanceProp);
+//                EditorGUILayout.PropertyField(projectilePrefabProp);
+//                EditorGUILayout.PropertyField(projectileSpeedProp);
+
+//                EditorGUILayout.Space();
+//                EditorGUILayout.LabelField("Projectile Behavior", EditorStyles.boldLabel);
+//                EditorGUILayout.PropertyField(useGravityProp);
+//                EditorGUILayout.PropertyField(stickDurationProp);
+//                EditorGUILayout.PropertyField(maxLifetimeProp);
+//                EditorGUILayout.PropertyField(knockbackForceProp);
+//                break;
+
+//            case DamageType.Explosion:
+//                EditorGUILayout.LabelField("Exploding Settings", EditorStyles.boldLabel);
+//                EditorGUILayout.PropertyField(explosionRadiusProp);
+//                EditorGUILayout.PropertyField(explosionDamageProp);
+//                EditorGUILayout.PropertyField(fuseTimeProp);
+//                break;
+
+//            default:
+//                EditorGUILayout.HelpBox($"No specific settings for damage type {damageType}.", MessageType.Info);
+//                break;
+//        }
+
+//        EditorGUILayout.Space();
+
+//        // Cooldown
+//        EditorGUILayout.LabelField("Cooldown Settings", EditorStyles.boldLabel);
+//        EditorGUILayout.PropertyField(cooldownDurationProp);
+
+//        serializedObject.ApplyModifiedProperties();
+//    }
+//}

@@ -26,7 +26,6 @@ public class Combat : MonoBehaviour
     {
         List<GameObject> hitTargets = new List<GameObject>();
         Collider[] hits = Physics.OverlapSphere(origin, range, layerMask);
-
         foreach (var hit in hits)
         {
             GameObject rootObj = hit.transform.root.gameObject;
@@ -35,8 +34,7 @@ public class Combat : MonoBehaviour
 
             Vector3 directionToTarget = (rootObj.transform.position - origin).normalized;
             float angleToTarget = Vector3.Angle(forward, directionToTarget);
-            if (angleToTarget <= angle / 2f)
-                hitTargets.Add(rootObj);
+            hitTargets.Add(rootObj);
         }
 
         return hitTargets;
@@ -72,4 +70,28 @@ public class Combat : MonoBehaviour
             );
         }
     }
+
+    public void PerformExplosionAttack(Vector3 center, float radius, float damage, DamageType damageType, GameObject source, float knockbackForce = 0f)
+    {
+        Collider[] hitColliders = Physics.OverlapSphere(center, radius);
+        foreach (Collider hit in hitColliders)
+        {
+            GameObject target = hit.transform.root.gameObject;
+            if (target == gameObject) continue;
+            if (target.TryGetComponent(out Health health))
+            {
+                DamageData data = new DamageData(damage, damageType, source);
+                health.InflictDamage(data);
+            }
+
+            if (hit.TryGetComponent(out Rigidbody rb))
+            {
+                Vector3 knockbackDir = (hit.transform.position - center).normalized;
+                rb.AddForce(knockbackDir * knockbackForce, ForceMode.Impulse);
+            }
+        }
+
+        // Optional: instantiate explosion VFX here
+    }
+
 }

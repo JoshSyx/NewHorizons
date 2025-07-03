@@ -6,6 +6,9 @@ public class UserInput : MonoBehaviour
     public static UserInput Instance;
     public static PlayerInput PlayerInput;
 
+    public bool DashTriggered { get; private set; }
+    public Vector2 DashDirection { get; private set; }
+
     public Vector2 MoveInput { get; private set; }
     public Vector2 AimInput { get; private set; }
 
@@ -16,7 +19,6 @@ public class UserInput : MonoBehaviour
     public bool ActionFiveJustPressed { get; private set; }
     public bool ActionSixJustPressed { get; private set; }
     public bool LeftTriggerJustPressed { get; private set; }
-
 
     public bool ActionOneBeingHeld { get; private set; }
     public bool ActionTwoBeingHeld { get; private set; }
@@ -46,6 +48,21 @@ public class UserInput : MonoBehaviour
     private InputAction _actionSix;
     private InputAction _leftTrigger;
     private InputAction _menuOpenCloseAction;
+
+    [Header("Double Tap Dash Settings")]
+    [SerializeField] private float doubleTapThreshold = 0.3f;
+    [SerializeField] private float dashDirectionThreshold = 0.7f;
+
+    private enum DashTapState
+    {
+        WaitingForFirstTap,
+        WaitingForRelease,
+        WaitingForSecondTap
+    }
+
+    private DashTapState doubleTapState = DashTapState.WaitingForFirstTap;
+    private float lastTapTime = -1f;
+    private Vector2 lastTapDirection = Vector2.zero;
 
     private void Awake()
     {
@@ -77,7 +94,6 @@ public class UserInput : MonoBehaviour
 
     private void UpdateInputs()
     {
-        Debug.Log(LeftTriggerBeingHeld);
         MoveInput = _moveAction.ReadValue<Vector2>();
         AimInput = _aimAction.ReadValue<Vector2>();
 
@@ -106,5 +122,77 @@ public class UserInput : MonoBehaviour
         LeftTriggerReleased = _leftTrigger.WasReleasedThisFrame();
 
         MenuOpenCloseInput = _menuOpenCloseAction.WasPressedThisFrame();
+
+        DashTriggered = false;
+
+        // --- Updated Double Tap Dash Logic ---
+        float now = Time.time;
+
+        if (AimInput.magnitude >= dashDirectionThreshold)
+        {
+            Vector2 currentDirection = AimInput.normalized;
+
+            switch (doubleTapState)
+            {
+                case DashTapState.WaitingForFirstTap:
+                    doubleTapState = DashTapState.WaitingForRelease;
+                    lastTapTime = now;
+                    lastTapDirection = currentDirection;
+                    break;
+
+                case DashTapState.WaitingForSecondTap:
+                    if ((now - lastTapTime) <= doubleTapThreshold &&
+                        Vector2.Dot(currentDirection, lastTapDirection) > 0.9f)
+                    {
+                        DashTriggered = true;
+                        DashDirection = currentDirection;
+
+                        // Reset
+                        doubleTapState = DashTapState.WaitingForFirstTap;
+                        lastTapTime = -1f;
+                        lastTapDirection = Vector2.zero;
+                    }
+                    else
+                    {
+                        // Restart as new first tap
+                        doubleTapState = DashTapState.WaitingForRelease;
+                        lastTapTime = now;
+                        lastTapDirection = currentDirection;
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (doubleTapState == DashTapState.WaitingForRelease)
+            {
+                doubleTapState = DashTapState.WaitingForSecondTap;
+            }
+            else if (doubleTapState == DashTapState.WaitingForSecondTap &&
+                     (now - lastTapTime) > doubleTapThreshold)
+            {
+                // Timeout
+                doubleTapState = DashTapState.WaitingForFirstTap;
+                lastTapTime = -1f;
+                lastTapDirection = Vector2.zero;
+            }
+        }
+    }
+
+    public Vector3 GetWorldDashDirection()
+    {
+        if (Camera.main == null) return Vector3.zero;
+
+        Vector2 aimDir = DashDirection.normalized;
+        Vector3 camForward = Camera.main.transform.forward;
+        Vector3 camRight = Camera.main.transform.right;
+
+        camForward.y = 0f;
+        camRight.y = 0f;
+
+        camForward.Normalize();
+        camRight.Normalize();
+
+        return (camForward * aimDir.y + camRight * aimDir.x).normalized;
     }
 }

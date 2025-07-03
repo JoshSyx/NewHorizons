@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class EnemyController : MonoBehaviour
@@ -8,7 +8,7 @@ public class EnemyController : MonoBehaviour
     private GameObject playerObject;
     private Rigidbody rb;
 
-    private enum DodgeState { Idle, DodgeLeft, DodgeRight, AdjustDistance }
+    private enum DodgeState { Idle, DodgeLeft, DodgeRight, AdjustDistance, Diving }
     private DodgeState currentState = DodgeState.Idle;
 
     private float stateTimer = 0f;
@@ -62,20 +62,41 @@ public class EnemyController : MonoBehaviour
     void FixedUpdate()
     {
         if (playerObject == null || enemyData == null) return;
-        if (enemyData.isFlying) return;
 
         Vector3 toPlayer = playerObject.transform.position - transform.position;
         float distance = toPlayer.magnitude;
-        Vector3 direction = toPlayer.normalized;
+        Vector3 directionToPlayer = toPlayer.normalized;
+
+        // ✅ FIXED: Proper 3D diving behavior
+        if (currentState == DodgeState.Diving && enemyData.isFlying)
+        {
+            Vector3 diveTarget = playerObject.transform.position;
+            Vector3 diveDir = (diveTarget - rb.position).normalized;
+
+            Vector3 nextPos = rb.position + diveDir * enemyData.diveSpeed * Time.fixedDeltaTime;
+
+            // Optional: Clamp to stay above ground
+            nextPos.y = Mathf.Max(nextPos.y, 0.5f);
+
+            rb.MovePosition(nextPos);
+
+            if (diveDir.sqrMagnitude > 0.01f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(diveDir);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 10f * Time.fixedDeltaTime);
+            }
+
+            return;
+        }
 
         Vector3 targetMoveDir = currentState switch
         {
-            DodgeState.DodgeLeft => Vector3.Cross(Vector3.up, direction).normalized * 1.2f + AdjustDistance(direction, distance) * 0.5f,
-            DodgeState.DodgeRight => -Vector3.Cross(Vector3.up, direction).normalized * 1.2f + AdjustDistance(direction, distance) * 0.5f,
-            _ => AdjustDistance(direction, distance)
+            DodgeState.DodgeLeft => Vector3.Cross(Vector3.up, directionToPlayer).normalized * 1.2f + AdjustDistance(directionToPlayer, distance) * 0.5f,
+            DodgeState.DodgeRight => -Vector3.Cross(Vector3.up, directionToPlayer).normalized * 1.2f + AdjustDistance(directionToPlayer, distance) * 0.5f,
+            _ => AdjustDistance(directionToPlayer, distance)
         };
 
-        currentMoveDir = Vector3.Lerp(currentMoveDir, targetMoveDir, Time.fixedDeltaTime / enemyData.directionSmoothness);
+        currentMoveDir = Vector3.Lerp(currentMoveDir, targetMoveDir.normalized, Time.fixedDeltaTime / enemyData.directionSmoothness);
 
         avoidanceUpdateTimer -= Time.fixedDeltaTime;
         if (avoidanceUpdateTimer <= 0f)
@@ -84,19 +105,40 @@ public class EnemyController : MonoBehaviour
             lastAvoidanceForce = Vector3.Lerp(lastAvoidanceForce, newAvoidance, 0.5f);
             avoidanceUpdateTimer = 0.2f + Random.Range(0f, 0.05f);
         }
+
         smoothedAvoidanceForce = Vector3.Lerp(smoothedAvoidanceForce, lastAvoidanceForce, Time.fixedDeltaTime / enemyData.directionSmoothness);
 
-        Vector3 finalMoveDir = currentMoveDir + smoothedAvoidanceForce;
-        finalMoveDir.y = 0f;
+        Vector3 finalMoveDir = (currentMoveDir + smoothedAvoidanceForce).normalized;
 
-        Vector3 move = finalMoveDir.normalized * enemyData.speed * Time.fixedDeltaTime;
+        if (enemyData.isFlying)
+        {
+            float currentY = transform.position.y;
+            float targetY = enemyData.flyingHeight;
+            float smoothY = Mathf.Lerp(currentY, targetY, enemyData.verticalSmoothness);
+            finalMoveDir.y = (smoothY - currentY) / Time.fixedDeltaTime;
+        }
+        else
+        {
+            finalMoveDir.y = 0f;
+        }
+
+        Vector3 move = finalMoveDir * enemyData.speed * Time.fixedDeltaTime;
         rb.MovePosition(rb.position + move);
 
-        Vector3 flatDir = new Vector3(toPlayer.x, 0f, toPlayer.z);
-        if (flatDir.sqrMagnitude > 0.01f)
+        Vector3 flatMoveDir = new Vector3(finalMoveDir.x, 0f, finalMoveDir.z);
+        if (flatMoveDir.sqrMagnitude > 0.01f)
         {
-            Quaternion targetRot = Quaternion.LookRotation(flatDir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 5f * Time.fixedDeltaTime);
+            Quaternion targetRot = Quaternion.LookRotation(flatMoveDir);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 8f * Time.fixedDeltaTime);
+        }
+        else
+        {
+            Vector3 flatToPlayer = new Vector3(toPlayer.x, 0f, toPlayer.z);
+            if (flatToPlayer.sqrMagnitude > 0.01f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(flatToPlayer);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 5f * Time.fixedDeltaTime);
+            }
         }
     }
 
@@ -124,6 +166,13 @@ public class EnemyController : MonoBehaviour
 
     private void ChooseNextState(float distance)
     {
+        if (enemyData.isFlying && distance < enemyData.diveTriggerDistance)
+        {
+            currentState = DodgeState.Diving;
+            stateTimer = 1.5f;
+            return;
+        }
+
         if (!enemyData.keepDistance)
         {
             currentState = DodgeState.DodgeLeft;
@@ -158,6 +207,12 @@ public class EnemyController : MonoBehaviour
         }
     }
 
+    public void ResetStateAfterDive()
+    {
+        currentState = DodgeState.Idle;
+        stateTimer = idleDuration;
+    }
+
     private Vector3 AdjustDistance(Vector3 direction, float distance)
     {
         if (distance < enemyData.followDistance - enemyData.distanceTolerance)
@@ -181,7 +236,7 @@ public class EnemyController : MonoBehaviour
         if (angleToPlayer > enemyData.visionAngle / 2f) return false;
 
         RaycastHit hit;
-        Vector3 origin = transform.position + Vector3.up * 1.5f;
+        Vector3 origin = transform.position;
         Vector3 direction = toPlayer.normalized;
 
         if (Physics.Raycast(origin, direction, out hit, enemyData.visionDistance))
@@ -190,5 +245,10 @@ public class EnemyController : MonoBehaviour
         }
 
         return false;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        // Max distance gizmo removed
     }
 }

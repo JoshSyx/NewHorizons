@@ -13,17 +13,24 @@ MonoBehaviour:
   m_Name: Hoplites
   m_EditorClassIdentifier: 
   speed: 4
-  followDistance: 5
+  followDistance: 2
   distanceTolerance: 0.5
   keepDistance: 0
+  visionDistance: 15
+  visionAngle: 90
   directionSmoothness: 0.1
-  avoidanceRadius: 2
+  avoidanceRadius: 0
   avoidanceStrength: 15
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 15360
   isFlying: 0
   flyingHeight: 3
   verticalSmoothness: 0.2
+  diveSpeed: 10
+  diveTriggerDistance: 8
+  retreatDistance: 3
+  retreatSpeed: 10
+  retreatAfterHit: 0
   equippedWeapon: {fileID: 11400000, guid: 91eb45b04a395ba4db6a08e237154f9f, type: 2}
   attackCooldown: 1.5

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 056d56f960dddd24a93a45a465062b88, type: 3}
   m_Name: Dash
   m_EditorClassIdentifier: 
-  itemName: 
+  itemName: Dash
   icon: {fileID: 0}
   itemType: 1
   worldModelPrefab: {fileID: 0}

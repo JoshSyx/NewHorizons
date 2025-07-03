@@ -5,6 +5,5 @@ public enum Slot
     Action2,
     Action3,
     Action4,
-    Action5,
-    Action6
+    Action5
 }

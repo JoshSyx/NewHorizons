@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 569ccfe848f96b74ca3320c4a8cabe91, type: 3}
+  m_Name: Fear
+  m_EditorClassIdentifier: 
+  itemName: Fear
+  icon: {fileID: 0}
+  itemType: 0
+  worldModelPrefab: {fileID: 0}
+  slot: 4
+  weaponWorldModelPrefab: {fileID: 0}
+  baseDamage: 200
+  damageType: 4
+  IsContinuousFire: 0
+  range: 30
+  MeleeAngle: 90
+  RangedDistance: 20
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 10
+  explosionRadius: 50
+  explosionDamage: 200
+  fuseTime: 2
+  useGravity: 1
+  stickDuration: 5
+  maxLifetime: 20
+  knockbackForce: 3
+  cooldownDuration: 20

@@ -330,6 +330,28 @@
                 },
                 {
                     "name": "",
+                    "id": "757aad06-6edf-40c4-a1e7-8d4c2bf4043a",
+                    "path": "<Gamepad>/rightStickPress",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Trigger",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d2648080-643e-44ad-be64-df9e9523e4e4",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Trigger",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "20e8ad57-50b7-4797-ab8c-ef1b8eb6e527",
                     "path": "<Gamepad>/rightStick",
                     "interactions": "",

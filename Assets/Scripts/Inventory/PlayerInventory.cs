@@ -1,10 +1,10 @@
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class StartingWeaponEntry
 {
-    public Item item; // Can be WeaponItem or AbilityItem
+    public Item item;
 }
 
 public class PlayerInventory : MonoBehaviour
@@ -19,7 +19,6 @@ public class PlayerInventory : MonoBehaviour
     [Header("Starting Weapons or Abilities")]
     [SerializeField] private List<StartingWeaponEntry> startingWeapons;
 
-    // Track the last selected slot
     private Slot lastSelectedSlot = Slot.None;
 
     private void Awake()
@@ -42,9 +41,8 @@ public class PlayerInventory : MonoBehaviour
             if (entry.item is IEquippableSlotItem equippable)
             {
                 EquipItemToSlot(equippable, equippable.Slot);
-                // Set the first equipped slot as the last selected by default
                 if (lastSelectedSlot == Slot.None)
-                    lastSelectedSlot = equippable.Slot;
+                    SetLastSelectedSlot(equippable.Slot);
             }
             else
             {
@@ -58,20 +56,13 @@ public class PlayerInventory : MonoBehaviour
         if (newItem == null) return;
 
         if (equippedItems.TryGetValue(slot, out var currentItem) && currentItem == newItem)
-        {
-            Debug.Log($"Item {newItem.ItemName} is already equipped in slot {slot}.");
             return;
-        }
 
         if (currentItem != null)
-        {
             DropItem(currentItem);
-        }
 
         var itemInstance = Object.Instantiate(newItem as ScriptableObject) as IEquippableSlotItem;
         equippedItems[slot] = itemInstance;
-
-        Debug.Log($"Equipped {itemInstance.ItemName} to {slot} slot.");
     }
 
     private void DropItem(IEquippableSlotItem item)
@@ -113,14 +104,13 @@ public class PlayerInventory : MonoBehaviour
         }
     }
 
-    // NEW: Get the last selected slot
     public Slot GetLastSelectedSlot() => lastSelectedSlot;
 
-    // NEW: Set the last selected slot
     public void SetLastSelectedSlot(Slot slot)
     {
         if (slot == lastSelectedSlot) return;
+
         lastSelectedSlot = slot;
-        Debug.Log($"Last selected slot set to {slot}");
+        OverlayManager.Instance?.ShowActiveSlot(slot);
     }
 }

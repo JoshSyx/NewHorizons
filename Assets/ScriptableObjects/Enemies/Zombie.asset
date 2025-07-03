@@ -13,17 +13,24 @@ MonoBehaviour:
   m_Name: Zombie
   m_EditorClassIdentifier: 
   speed: 6
-  followDistance: 0
+  followDistance: 2
   distanceTolerance: 0.5
-  keepDistance: 1
+  keepDistance: 0
+  visionDistance: 15
+  visionAngle: 90
   directionSmoothness: 0.1
   avoidanceRadius: 2
   avoidanceStrength: 15
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 1024
+    m_Bits: 15360
   isFlying: 0
   flyingHeight: 5
   verticalSmoothness: 0.2
+  diveSpeed: 10
+  diveTriggerDistance: 8
+  retreatDistance: 3
+  retreatSpeed: 10
+  retreatAfterHit: 0
   equippedWeapon: {fileID: 11400000, guid: e528bbf2e3bad1c4ea016f5d0396b5d8, type: 2}
   attackCooldown: 1.5

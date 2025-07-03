@@ -100,6 +100,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0672f6691fcb97438c32205426bf052, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sliceMeshPrefab: {fileID: 7224506254804056916, guid: d61dc65eeecab0c418021056154761c9, type: 3}
+  meleeVisualDuration: 0.5
 --- !u!54 &6882701099376333488
 Rigidbody:
   m_ObjectHideFlags: 0

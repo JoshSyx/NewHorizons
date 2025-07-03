@@ -4,5 +4,6 @@ public enum AbilityType
     Dash,
     Melee,
     Ranged,
+    Shield
     // add more as needed
 }

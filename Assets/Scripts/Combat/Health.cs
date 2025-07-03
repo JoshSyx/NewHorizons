@@ -9,6 +9,11 @@ public class Health : MonoBehaviour
     private float currentHealth;
     private bool isDead = false;
 
+    [Header("Shield Settings")]
+    private float currentShield = 0f;
+    private float shieldReductionPercent = 0f;
+    private float shieldTimer = 0f;
+
     [Header("User Feedback")]
     [SerializeField] private Material idle;
     [SerializeField] private Material getHit;
@@ -19,6 +24,7 @@ public class Health : MonoBehaviour
     private Coroutine flashCoroutine;
 
     public float CurrentHealth => currentHealth;
+    public float CurrentShield => currentShield;
     public bool IsAlive => currentHealth > 0f;
 
     protected virtual void Awake()
@@ -42,11 +48,42 @@ public class Health : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (shieldTimer > 0f)
+        {
+            shieldTimer -= Time.deltaTime;
+            if (shieldTimer <= 0f)
+            {
+                currentShield = 0f;
+                Debug.Log($"{gameObject.name}'s shield expired.");
+            }
+        }
+    }
+
     public void InflictDamage(DamageData damageData)
     {
         if (isDead) return;
 
-        currentHealth = Mathf.Max(0f, currentHealth - damageData.FinalAmount);
+        float finalDamage = damageData.FinalAmount;
+
+        if (currentShield > 0f)
+        {
+            float reducedDamage = finalDamage * (1f - shieldReductionPercent);
+            float absorbed = finalDamage - reducedDamage;
+
+            currentShield -= absorbed;
+
+            if (currentShield <= 0f)
+            {
+                Debug.Log($"{gameObject.name}'s shield broke!");
+                currentShield = 0f;
+            }
+
+            finalDamage = reducedDamage;
+        }
+
+        currentHealth = Mathf.Max(0f, currentHealth - finalDamage);
 
         if (flashCoroutine != null)
             StopCoroutine(flashCoroutine);
@@ -56,6 +93,31 @@ public class Health : MonoBehaviour
         {
             Kill();
         }
+    }
+
+    public void Heal(float amount)
+    {
+        if (isDead || amount <= 0f) return;
+
+        float previousHealth = currentHealth;
+        currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
+
+        Debug.Log($"{gameObject.name} healed for {currentHealth - previousHealth} points");
+
+        if (flashCoroutine != null)
+            StopCoroutine(flashCoroutine);
+        flashCoroutine = StartCoroutine(FlashMaterial(idle, 0.2f)); // Reuses idle as healing visual
+    }
+
+    public void ApplyShield(AbilityItem ability)
+    {
+        if (ability == null || ability.shieldAmount <= 0f) return;
+
+        currentShield = ability.shieldAmount;
+        shieldReductionPercent = Mathf.Clamp01(ability.shieldDamageReductionPercent);
+        shieldTimer = ability.shieldDuration;
+
+        Debug.Log($"{gameObject.name} gained a shield for {currentShield} damage (Duration: {shieldTimer}s, Reduction: {shieldReductionPercent * 100f}%)");
     }
 
     public virtual void Kill()

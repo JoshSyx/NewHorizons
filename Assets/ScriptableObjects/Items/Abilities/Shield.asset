@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 056d56f960dddd24a93a45a465062b88, type: 3}
+  m_Name: Shield
+  m_EditorClassIdentifier: 
+  itemName: Shield
+  icon: {fileID: 0}
+  itemType: 1
+  worldModelPrefab: {fileID: 0}
+  slot: 1
+  abilityWorldModelPrefab: {fileID: 0}
+  abilityType: 3
+  IsContinuousFire: 0
+  damageType: 5
+  baseDamage: 0
+  dashSpeed: 25
+  dashDuration: 0.2
+  dashCooldown: 1
+  MeleeRange: 2
+  MeleeAngle: 90
+  RangedDistance: 20
+  projectilePrefab: {fileID: 0}
+  projectileSpeed: 10
+  useGravity: 1
+  stickDuration: 5
+  maxLifetime: 20
+  knockbackForce: 3
+  shieldAmount: 100
+  shieldDuration: 30
+  shieldDamageReductionPercent: 0.75
+  cooldownDuration: 30

@@ -7,12 +7,12 @@ public class AbilityItem : Item, IEquippableSlotItem, IRangedItem
     public GameObject abilityWorldModelPrefab;
 
     public AbilityType abilityType = AbilityType.None;
+    public bool IsContinuousFire = false; // NEW flag to control shooting mode
 
     public DamageType damageType = DamageType.Effect; // Default for abilities
     public float baseDamage = 0f;
 
     // Dash settings
-    [Tooltip("Only used if AbilityType is Dash")]
     public float dashSpeed = 25f;
     public float dashDuration = 0.2f;
     public float dashCooldown = 1f;
@@ -31,6 +31,11 @@ public class AbilityItem : Item, IEquippableSlotItem, IRangedItem
     public float stickDuration = 5f;
     public float maxLifetime = 20f;
     public float knockbackForce = 3f;
+
+    // Shield settings
+    public float shieldAmount = 0f;
+    public float shieldDuration = 5f;
+    [Range(0f, 1f)] public float shieldDamageReductionPercent = 0.75f;
 
     // Cooldown for all abilities
     public float cooldownDuration = 1f;
