@@ -6,6 +6,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     public GameObject _player;
+    public ShrinesUI _shrinesUI;
 
     public bool isGameOver;
     public bool isGamePaused;

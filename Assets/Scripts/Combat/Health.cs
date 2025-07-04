@@ -146,16 +146,7 @@ public class Health : MonoBehaviour
 
     public void Heal(float amount)
     {
-        if (isDead || amount <= 0f) return;
-
-        float previousHealth = currentHealth;
-        currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
-
-        Debug.Log($"{gameObject.name} healed for {currentHealth - previousHealth} points");
-
-        if (flashCoroutine != null)
-            StopCoroutine(flashCoroutine);
-        flashCoroutine = StartCoroutine(FlashMaterial(null, 0.2f)); // null means restore only
+        currentHealth = Mathf.Min(maxHealth, Mathf.Max(maxHealth * amount, currentHealth));
     }
 
     public void ApplyShield(AbilityItem ability)
@@ -277,5 +268,11 @@ public class Health : MonoBehaviour
         invincibilityTimer = duration;
 
         Debug.Log($"{gameObject.name} is now invincible for {duration} seconds.");
+    }
+
+    public void MultiplyMaxHealth(float multiplier)
+    {
+        maxHealth = Mathf.Min(1, maxHealth * multiplier);
+        Heal(1);
     }
 }
