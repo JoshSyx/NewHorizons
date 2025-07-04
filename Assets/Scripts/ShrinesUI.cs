@@ -195,13 +195,13 @@ public class ShrinesUI : MonoBehaviour
             switch (_currentAbilityOption.ability)
             {
                 case Abilities.Shield:
-                    Debug.Log("Shield Activated (not implemented)");
+                    PlayerInventory.Instance.EquipItemToSlot(GameManager.Instance.shieldAbility, GameManager.Instance.shieldAbility.slot);
                     break;
                 case Abilities.Fear:
-                    Debug.Log("Fear Activated (not implemented)");
+                    PlayerInventory.Instance.EquipItemToSlot(GameManager.Instance.fearAbility, GameManager.Instance.fearAbility.slot);
                     break;
                 case Abilities.Invincibility:
-                    Debug.Log("Invincibility Activated (not implemented)");
+                    PlayerInventory.Instance.EquipItemToSlot(GameManager.Instance.invinciblibyAbility, GameManager.Instance.invinciblibyAbility.slot);
                     break;
             }
         }

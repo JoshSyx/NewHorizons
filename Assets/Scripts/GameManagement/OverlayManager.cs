@@ -78,6 +78,7 @@ public class OverlayManager : MonoBehaviour
         }
 
         UpdateOverlayVisibility();
+        UpdateSlotUIVisibility();
         lastState = showOverlay;
 
         // Initial slot highlight
@@ -172,6 +173,7 @@ public class OverlayManager : MonoBehaviour
 
         SetCooldownUIActive(slot, true);
         UpdateCooldownUI(slot, maxDuration);
+        UpdateSlotUIVisibility();
     }
 
     // Update the cooldown value for the last used weapon's slot
@@ -197,6 +199,7 @@ public class OverlayManager : MonoBehaviour
             SetCooldownUIActive(lastSlot, false);
             slotCurrentCooldowns.Remove(lastSlot);
             slotMaxCooldowns.Remove(lastSlot);
+            UpdateSlotUIVisibility();
         }
     }
 
@@ -242,6 +245,27 @@ public class OverlayManager : MonoBehaviour
                 data.iconImage.sprite = isActive ? data.selectedSprite : data.normalSprite;
                 data.iconImage.color = Color.white; // Optional: Reset color in case it was modified elsewhere
             }
+        }
+    }
+
+    public void UpdateSlotUIVisibility()
+    {
+        if (PlayerInventory.Instance == null) return;
+
+        foreach (var slotData in slotUIData)
+        {
+            bool hasItem = PlayerInventory.Instance.GetEquippedItem(slotData.slot) != null;
+
+            if (slotData.iconImage != null)
+                slotData.iconImage.gameObject.SetActive(hasItem);
+        }
+
+        foreach (var cooldownData in cooldownUIDataList)
+        {
+            bool hasItem = PlayerInventory.Instance.GetEquippedItem(cooldownData.slot) != null;
+
+            if (cooldownData.cooldownSlider != null)
+                cooldownData.cooldownSlider.gameObject.SetActive(hasItem && slotCurrentCooldowns.ContainsKey(cooldownData.slot));
         }
     }
 

@@ -63,6 +63,7 @@ public class PlayerInventory : MonoBehaviour
 
         var itemInstance = Object.Instantiate(newItem as ScriptableObject) as IEquippableSlotItem;
         equippedItems[slot] = itemInstance;
+        OverlayManager.Instance?.UpdateSlotUIVisibility();
     }
 
     private void DropItem(IEquippableSlotItem item)
@@ -96,6 +97,7 @@ public class PlayerInventory : MonoBehaviour
     {
         if (equippedItems.Remove(slot))
         {
+            OverlayManager.Instance?.UpdateSlotUIVisibility();
             Debug.Log($"Unequipped item from {slot} slot.");
         }
         else

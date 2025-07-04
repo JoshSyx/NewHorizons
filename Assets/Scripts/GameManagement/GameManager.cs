@@ -6,6 +6,11 @@ public class GameManager : MonoBehaviour
 
     public GameObject _player;
     public ShrinesUI _shrinesUI;
+
+    public AbilityItem shieldAbility;
+    public AbilityItem fearAbility;
+    public AbilityItem invinciblibyAbility;
+
     
     public float damageMultiplier = 1;
 

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4778411783762858435}
   - component: {fileID: -7762350951509744352}
   - component: {fileID: 8701233657497298656}
+  - component: {fileID: 8014793732495243288}
   m_Layer: 10
   m_Name: Archers
   m_TagString: Enemy
@@ -48,7 +49,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60ea719778c13614f8bf9e02de6dee77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 60
   idle: {fileID: 2100000, guid: bbc83f9e2b6f95e428a02a349fbefc20, type: 2}
   getHit: {fileID: 2100000, guid: 951b8304f139d6c41ab5077db2bf7837, type: 2}
   die: {fileID: 2100000, guid: 800c642ad61312c4897b95220d328195, type: 2}
@@ -104,6 +104,29 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!136 &8014793732495243288
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3553088143777831068}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.01, z: 0}
 --- !u!1001 &7956998525002979069
 PrefabInstance:
   m_ObjectHideFlags: 0
