@@ -43,14 +43,14 @@ public class FadeManager : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Time.timeScale = 1f; // Ensure time is running in new scene
+        Time.timeScale = 1f;
 
         if (fadeCanvasGroup == null)
         {
             fadeCanvasGroup = GetComponentInChildren<CanvasGroup>(true);
         }
 
-        StartCoroutine(Fade(1, 0)); // Fade in from black
+        StartCoroutine(Fade(1, 0));
     }
 
     public void LoadScene(string sceneName)
@@ -82,12 +82,21 @@ public class FadeManager : MonoBehaviour
         }
     }
 
+    public void ExitGame()
+    {
+        Debug.Log("FadeManager: Exiting game.");
+        Application.Quit();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#endif
+    }
+
     private IEnumerator FadeAndLoad(string sceneName)
     {
         isFading = true;
-        yield return StartCoroutine(Fade(0, 1)); // Fade to black
+        yield return StartCoroutine(Fade(0, 1));
         SceneManager.LoadScene(sceneName);
-        // Fade back in happens in OnSceneLoaded
     }
 
     private IEnumerator Fade(float startAlpha, float endAlpha)

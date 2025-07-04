@@ -18,15 +18,19 @@ MonoBehaviour:
   worldModelPrefab: {fileID: 0}
   slot: 0
   weaponWorldModelPrefab: {fileID: 0}
-  baseDamage: 4
+  baseDamage: 10
   damageType: 2
-  MeleeRange: 2
+  IsContinuousFire: 0
+  range: 50
   MeleeAngle: 90
   RangedDistance: 20
   projectilePrefab: {fileID: 329524422957159383, guid: f6a37403b8e8d9d4d8388c16b16b204d, type: 3}
   projectileSpeed: 20
+  explosionRadius: 5
+  explosionDamage: 20
+  fuseTime: 2
   useGravity: 1
   stickDuration: 5
   maxLifetime: 20
   knockbackForce: 3
-  cooldownDuration: 0.5
+  cooldownDuration: 0

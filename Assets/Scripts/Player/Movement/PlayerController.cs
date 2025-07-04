@@ -17,7 +17,8 @@ public class PlayerController : MonoBehaviour
     private PlayerDash playerDash;
     public PlayerInput playerInput;
 
-    private Vector3 lastManualForward = Vector3.forward; // Default
+    private Vector3 lastManualForward = Vector3.forward;
+    public Vector3 LastManualForward => lastManualForward;
 
     private void Awake()
     {
@@ -186,29 +187,28 @@ public class PlayerController : MonoBehaviour
     private void TryPerformAction(Slot slot, bool pressed)
     {
         if (!pressed) return;
+
         PlayerInventory.Instance.SetLastSelectedSlot(slot);
 
-        var overlay = OverlayManager.Instance;
-        if (overlay != null)
-        {
-            overlay.ShowActiveSlot(slot);
-        }
-
         var item = PlayerInventory.Instance.GetEquippedItem(slot);
+
+        OverlayManager.Instance?.ShowActiveSlot(slot);
+
         if (item == null)
         {
             Debug.LogWarning($"No item equipped in slot: {slot}");
             return;
         }
 
+        // Special case: dash ability
         if (item is AbilityItem ability && ability.abilityType == AbilityType.Dash)
         {
             playerDash?.TryDash(lastMoveDirection.normalized);
+            return;
         }
-        else
-        {
-            playerCombat?.AttackWithSlot(slot);
-        }
+
+        // Default action (attack/shoot)
+        playerCombat?.AttackWithSlot(slot);
     }
 
 
@@ -237,7 +237,6 @@ public class PlayerController : MonoBehaviour
             overlay.ShowActiveSlot(lastSlot);
         }
 
-        // Check if item is AbilityItem or WeaponItem, and get IsContinuousFire flag
         bool isContinuousFire = false;
         bool isDashAbility = false;
 
@@ -251,25 +250,28 @@ public class PlayerController : MonoBehaviour
             isContinuousFire = weapon.IsContinuousFire;
         }
 
-        // Handle dash ability separately
+        // Handle dash ability
         if (isDashAbility)
         {
             if (UserInput.Instance.LeftTriggerJustPressed)
             {
                 playerDash?.TryDash(lastMoveDirection.normalized);
             }
+
             playerCombat.StopShooting();
             return;
         }
 
-        // Handle shooting for weapons and other abilities
-        if (UserInput.Instance.LeftTriggerJustPressed || (isContinuousFire && UserInput.Instance.LeftTriggerBeingHeld))
+        // Determine trigger state
+        bool triggerJustPressed = UserInput.Instance.LeftTriggerJustPressed;
+        bool triggerHeld = UserInput.Instance.LeftTriggerBeingHeld;
+
+        if ((isContinuousFire && triggerHeld) || (!isContinuousFire && triggerJustPressed))
         {
             if (item is WeaponItem weaponItem && weaponItem.IsRanged)
             {
                 playerCombat.StartShootingWithWeapon(weaponItem);
 
-                // If not continuous fire, stop immediately after shooting once
                 if (!isContinuousFire)
                 {
                     playerCombat.StopShooting();
@@ -279,14 +281,13 @@ public class PlayerController : MonoBehaviour
             {
                 playerCombat.AttackWithSlot(lastSlot);
 
-                // Stop shooting if not continuous fire
                 if (!isContinuousFire)
                 {
                     playerCombat.StopShooting();
                 }
             }
         }
-        else if (isContinuousFire && !UserInput.Instance.LeftTriggerBeingHeld)
+        else if (isContinuousFire && !triggerHeld)
         {
             playerCombat.StopShooting();
         }
@@ -295,6 +296,7 @@ public class PlayerController : MonoBehaviour
             playerCombat.StopShooting();
         }
     }
+
 
     private void HandleDashInput()
     {

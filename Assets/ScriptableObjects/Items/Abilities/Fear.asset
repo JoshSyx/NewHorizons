@@ -26,11 +26,11 @@ MonoBehaviour:
   RangedDistance: 20
   projectilePrefab: {fileID: 0}
   projectileSpeed: 10
-  explosionRadius: 50
-  explosionDamage: 200
+  explosionRadius: 30
+  explosionDamage: 30
   fuseTime: 2
   useGravity: 1
   stickDuration: 5
   maxLifetime: 20
   knockbackForce: 3
-  cooldownDuration: 20
+  cooldownDuration: 8

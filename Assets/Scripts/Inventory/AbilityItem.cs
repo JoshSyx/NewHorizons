@@ -7,9 +7,9 @@ public class AbilityItem : Item, IEquippableSlotItem, IRangedItem
     public GameObject abilityWorldModelPrefab;
 
     public AbilityType abilityType = AbilityType.None;
-    public bool IsContinuousFire = false; // NEW flag to control shooting mode
+    public bool IsContinuousFire = false;
 
-    public DamageType damageType = DamageType.Effect; // Default for abilities
+    public DamageType damageType = DamageType.Effect;
     public float baseDamage = 0f;
 
     // Dash settings
@@ -37,6 +37,9 @@ public class AbilityItem : Item, IEquippableSlotItem, IRangedItem
     public float shieldDuration = 5f;
     [Range(0f, 1f)] public float shieldDamageReductionPercent = 0.75f;
 
+    // Invincibility settings
+    public float invincibilityDuration = 2f;
+
     // Cooldown for all abilities
     public float cooldownDuration = 1f;
 
@@ -58,11 +61,9 @@ public class AbilityItem : Item, IEquippableSlotItem, IRangedItem
     // IRangedItem implementation
     GameObject IRangedItem.projectilePrefab => projectilePrefab;
     float IRangedItem.projectileSpeed => projectileSpeed;
-
     bool IRangedItem.useGravity => useGravity;
     float IRangedItem.stickDuration => stickDuration;
     float IRangedItem.maxLifetime => maxLifetime;
     float IRangedItem.knockbackForce => knockbackForce;
-
     DamageData IRangedItem.GetDamageData(GameObject source) => GetDamageData(source);
 }

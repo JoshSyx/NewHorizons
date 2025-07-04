@@ -18,7 +18,7 @@ MonoBehaviour:
   worldModelPrefab: {fileID: 0}
   slot: 1
   abilityWorldModelPrefab: {fileID: 0}
-  abilityType: 3
+  abilityType: 4
   IsContinuousFire: 0
   damageType: 5
   baseDamage: 0
@@ -34,7 +34,7 @@ MonoBehaviour:
   stickDuration: 5
   maxLifetime: 20
   knockbackForce: 3
-  shieldAmount: 100
-  shieldDuration: 30
-  shieldDamageReductionPercent: 0.75
-  cooldownDuration: 30
+  shieldAmount: 50
+  shieldDuration: 4
+  shieldDamageReductionPercent: 1
+  cooldownDuration: 15

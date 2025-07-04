@@ -19,6 +19,7 @@ MonoBehaviour:
   slot: 3
   abilityWorldModelPrefab: {fileID: 0}
   abilityType: 1
+  IsContinuousFire: 0
   damageType: 0
   baseDamage: 0
   dashSpeed: 25
@@ -33,4 +34,7 @@ MonoBehaviour:
   stickDuration: 5
   maxLifetime: 20
   knockbackForce: 3
-  cooldownDuration: 1
+  shieldAmount: 0
+  shieldDuration: 5
+  shieldDamageReductionPercent: 0.75
+  cooldownDuration: 3

@@ -18,7 +18,7 @@ MonoBehaviour:
   worldModelPrefab: {fileID: 0}
   slot: 3
   weaponWorldModelPrefab: {fileID: 0}
-  baseDamage: 10
+  baseDamage: 50
   damageType: 1
   IsContinuousFire: 1
   range: 2
@@ -33,4 +33,4 @@ MonoBehaviour:
   stickDuration: 5
   maxLifetime: 20
   knockbackForce: 3
-  cooldownDuration: 0.3
+  cooldownDuration: 1

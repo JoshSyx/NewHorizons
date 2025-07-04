@@ -38,6 +38,18 @@ public class PlayerCombat : Combat
         foreach (var weapon in keys)
         {
             weaponCooldownTimers[weapon] -= Time.deltaTime;
+
+            if (weapon == lastUsedWeapon && OverlayManager.Instance != null)
+            {
+                float remaining = Mathf.Max(0f, weaponCooldownTimers[weapon]);
+                OverlayManager.Instance.UpdateCooldownValue(remaining);
+
+                if (remaining <= 0f)
+                {
+                    OverlayManager.Instance.ClearCooldownDisplay();
+                }
+            }
+
             if (weaponCooldownTimers[weapon] <= 0f)
                 weaponCooldownTimers.Remove(weapon);
         }
@@ -87,7 +99,7 @@ public class PlayerCombat : Combat
                 PerformExplosionAttack(transform.position, weapon.explosionRadius, weapon.explosionDamage, weapon.damageType, gameObject);
             }
 
-                StartWeaponCooldown(weapon);
+            StartWeaponCooldown(weapon);
         }
         else if (equippedItem is AbilityItem ability)
         {
@@ -100,21 +112,36 @@ public class PlayerCombat : Combat
                     PerformRangedAttackWithAbility(ability);
                     break;
                 case AbilityType.Dash:
-                    // TODO: Implement dash behavior
+                    // Apply invincibility for dash duration
+                    if (health != null)
+                    {
+                        float invincibilityDuration = ability.invincibilityDuration > 0 ? ability.invincibilityDuration : 1f;
+                        health.SetInvincibleForDuration(invincibilityDuration);
+                        // Optional: trigger dash movement logic here
+                    }
+                    else
+                    {
+                        Debug.LogWarning("No health component found to apply dash invincibility.");
+                    }
                     break;
                 case AbilityType.Shield:
                     if (health != null)
                         health.ApplyShield(ability);
                     else
-                    {
                         Debug.LogWarning("No health component found to apply shield to");
-                    }
-                        break;
+                    break;
+                case AbilityType.Invincibility:
+                    if (health != null)
+                        health.ActivateInvincibility(ability.invincibilityDuration);
+                    else
+                        Debug.LogWarning("No health component found to apply invincibility to");
+                    break;
                 default:
                     Debug.Log($"Unhandled ability type: {ability.abilityType}");
                     break;
             }
         }
+
 
         else
         {
@@ -219,6 +246,11 @@ public class PlayerCombat : Combat
     private void StartWeaponCooldown(WeaponItem weapon)
     {
         weaponCooldownTimers[weapon] = weapon.cooldownDuration;
+
+        if (OverlayManager.Instance != null)
+        {
+            OverlayManager.Instance.SetCooldown(weapon.cooldownDuration, weapon.cooldownDuration);
+        }
     }
 
     private void ShowMeleeSweepVisual(float range, float angle)

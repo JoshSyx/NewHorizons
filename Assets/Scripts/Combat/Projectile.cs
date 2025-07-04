@@ -6,6 +6,7 @@ public class Projectile : MonoBehaviour
     private DamageData damageData;
     private GameObject owner;
     private Rigidbody rb;
+    private Collider projectileCollider;
     private TrailRenderer trail;
 
     private float stickDuration = 5f;
@@ -15,19 +16,32 @@ public class Projectile : MonoBehaviour
     private float originalTrailTime;
     private Vector3 velocityAtHit;
 
+    // Audio
+    [Header("Audio")]
+    public AudioClip shootSound;
+    public AudioClip hitSound;
+    private AudioSource audioSource;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        projectileCollider = GetComponentInChildren<Collider>();
         trail = GetComponent<TrailRenderer>();
+        audioSource = GetComponent<AudioSource>();
 
         if (rb == null)
             Debug.LogWarning("Rigidbody missing on projectile.");
+
+        if (projectileCollider == null)
+            Debug.LogWarning("Collider missing on projectile.");
+
+        if (audioSource == null)
+            Debug.LogWarning("AudioSource missing on projectile.");
 
         if (trail != null)
             originalTrailTime = trail.time;
     }
 
-    // Use interface IRangedItem to support WeaponItem, AbilityItem, etc.
     public void Initialize(DamageData data, GameObject source, Vector3 velocity, IRangedItem rangedItem)
     {
         damageData = data;
@@ -40,8 +54,22 @@ public class Projectile : MonoBehaviour
             rb.linearVelocity = velocity;
         }
 
+        if (projectileCollider != null && owner != null)
+        {
+            Collider[] ownerColliders = owner.GetComponentsInChildren<Collider>();
+            foreach (var col in ownerColliders)
+            {
+                Physics.IgnoreCollision(projectileCollider, col);
+            }
+        }
+
         stickDuration = rangedItem.stickDuration;
         knockbackForce = rangedItem.knockbackForce;
+
+        if (audioSource != null && shootSound != null)
+        {
+            audioSource.PlayOneShot(shootSound);
+        }
 
         Destroy(gameObject, rangedItem.maxLifetime);
     }
@@ -62,18 +90,36 @@ public class Projectile : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (hasHit) return;
-        if (owner == null || other.transform.IsChildOf(owner.transform)) return;
+
+        if (owner != null && (other.transform == owner.transform || other.transform.IsChildOf(owner.transform)))
+            return;
+
+        hasHit = true;
+
+        if (projectileCollider != null)
+            projectileCollider.enabled = false;
+
+        if (rb != null && !rb.isKinematic)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+        }
 
         GameObject target = other.transform.root.gameObject;
-
         if (target == null) return;
 
-        Vector3 targetPosition = target.transform.position;
+        // Check for health component before playing hit sound
+        var health = target.GetComponent<Health>();
+        if (health != null && audioSource != null && hitSound != null)
+        {
+            audioSource.PlayOneShot(hitSound);
+        }
 
         Combat ownerCombat = owner.GetComponent<Combat>();
         if (ownerCombat != null)
         {
-            Vector3 knockbackDir = (targetPosition - transform.position).normalized;
+            Vector3 knockbackDir = (target.transform.position - transform.position).normalized;
             ownerCombat.ApplyDamage(target, damageData, knockbackDir, knockbackForce);
         }
         else
@@ -84,13 +130,13 @@ public class Projectile : MonoBehaviour
         StartCoroutine(StickAndDestroyDelayed(other));
     }
 
+
     private IEnumerator StickAndDestroyDelayed(Collider other)
     {
-        yield return null; // wait a frame so target destruction completes
+        yield return null;
         StickToTarget(other);
         Destroy(gameObject, stickDuration);
     }
-
 
     private void StickToTarget(Collider target)
     {
