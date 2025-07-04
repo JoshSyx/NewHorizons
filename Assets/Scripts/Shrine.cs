@@ -22,10 +22,12 @@ public class Shrine : MonoBehaviour
     
     private void OnTriggerEnter(Collider other)
     {
+        if (_shrineActivated) return;
         shrineUI = GameManager.Instance._shrinesUI;
         if (!other.CompareTag("Player")) return;
         Heal(other);
         shrineUI.ShowUI(this);
+        _shrineActivated = true;
     }
 
     private void OnTriggerStay(Collider other)
