@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7993061988069201675}
   - component: {fileID: 3562984990141943422}
   - component: {fileID: 1396743019359929736}
+  - component: {fileID: 5221360602449294244}
   m_Layer: 0
   m_Name: DeadTree01
   m_TagString: Untagged
@@ -64,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -1929036172255054197, guid: afe83f1f9af37a844aeb942e6d8cbbac, type: 3}
+  - {fileID: 2100000, guid: 9aa7a12f0728d1a49b986800203d932b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -86,3 +87,25 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &5221360602449294244
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8824585232073451712}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 1296351902144363106, guid: afe83f1f9af37a844aeb942e6d8cbbac, type: 3}
