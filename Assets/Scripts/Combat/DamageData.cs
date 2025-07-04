@@ -14,7 +14,7 @@ public struct DamageData
         RawAmount = rawAmount;
         Type = type;
         Source = source;
-        Multiplier = multiplier;
+        Multiplier = multiplier * GameManager.Instance.damageMultiplier;
     }
 
     public DamageData WithMultiplier(float newMultiplier)

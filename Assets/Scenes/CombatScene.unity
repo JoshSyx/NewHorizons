@@ -7770,6 +7770,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _player: {fileID: 1704279368}
   _shrinesUI: {fileID: 160998035}
+  damageMultiplier: 1
   isGameOver: 0
   isGamePaused: 0
 --- !u!114 &1017356458
@@ -12356,7 +12357,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60ea719778c13614f8bf9e02de6dee77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
   idle: {fileID: 2100000, guid: bbc83f9e2b6f95e428a02a349fbefc20, type: 2}
   getHit: {fileID: 2100000, guid: 951b8304f139d6c41ab5077db2bf7837, type: 2}
   die: {fileID: 2100000, guid: 800c642ad61312c4897b95220d328195, type: 2}
@@ -14325,6 +14325,10 @@ PrefabInstance:
     - target: {fileID: 2610682089272576802, guid: 66fd051a736cac949a04270abc97193c, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2692051347404262170, guid: 66fd051a736cac949a04270abc97193c, type: 3}
+      propertyPath: statsCards.Array.data[0].randomStatMultiplier.y
+      value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: 2849115859610238428, guid: 66fd051a736cac949a04270abc97193c, type: 3}
       propertyPath: m_Pivot.x

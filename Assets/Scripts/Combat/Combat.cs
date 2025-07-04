@@ -7,7 +7,7 @@ public class Combat : MonoBehaviour
     public void ApplyDamage(GameObject target, DamageData data, Vector3 knockbackDir = default, float knockbackForce = 0f)
     {
         if (!target.TryGetComponent(out Health targetHealth)) return;
-
+        Debug.Log(data.Multiplier);
         // Apply damage
         targetHealth.InflictDamage(data);
 

@@ -1,4 +1,3 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -7,6 +6,8 @@ public class GameManager : MonoBehaviour
 
     public GameObject _player;
     public ShrinesUI _shrinesUI;
+    
+    public float damageMultiplier = 1;
 
     public bool isGameOver;
     public bool isGamePaused;

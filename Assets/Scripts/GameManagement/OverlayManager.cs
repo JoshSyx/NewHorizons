@@ -96,7 +96,10 @@ public class OverlayManager : MonoBehaviour
         if (showOverlay && playerHealth != null)
         {
             if (healthSlider != null)
-                healthSlider.value = playerHealth.CurrentHealth;
+            {
+                healthSlider.maxValue = playerHealth.maxHealth;
+                healthSlider.value = playerHealth.CurrentHealth;   
+            }
 
             if (shieldSlider != null)
                 shieldSlider.value = Mathf.Clamp01(playerHealth.CurrentShield / 100f);

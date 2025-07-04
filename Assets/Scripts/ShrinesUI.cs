@@ -10,14 +10,14 @@ internal enum StatsType
 {
     Health,
     Speed,
-    TotalDamage,
-    DamageByBow
+    TotalDamage
 }
 
 internal enum Abilities
 {
-    Dash,
-    Shield
+    Invincibility,
+    Shield,
+    Fear
 }
 
 internal enum NoAbilitiesRemaining
@@ -194,11 +194,14 @@ public class ShrinesUI : MonoBehaviour
         {
             switch (_currentAbilityOption.ability)
             {
-                case Abilities.Dash:
-                    Debug.Log("Dash Activated (not implemented)");
-                    break;
                 case Abilities.Shield:
                     Debug.Log("Shield Activated (not implemented)");
+                    break;
+                case Abilities.Fear:
+                    Debug.Log("Fear Activated (not implemented)");
+                    break;
+                case Abilities.Invincibility:
+                    Debug.Log("Invincibility Activated (not implemented)");
                     break;
             }
         }
@@ -219,10 +222,7 @@ public class ShrinesUI : MonoBehaviour
                 Debug.Log("Speed Increased");
                 break;
             case StatsType.TotalDamage:
-                Debug.Log("Total Damage Increased (not implemented)");
-                break;
-            case StatsType.DamageByBow:
-                Debug.Log("Damage by Bow Increased (not implemented)");
+                GameManager.Instance.damageMultiplier *= multiplier;
                 break;
         }
     }
